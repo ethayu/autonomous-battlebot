@@ -4,11 +4,11 @@
 
 #define MAX_PWM 16382
 
-#define pwmPin1 1
+#define pwmPin1 1 // PWM pin for left motor
 #define pwmPin2 8
 
-#define cPin1 7
-#define cPin2 9
+#define cPin1 7 // H bridge control pin 1 for left motor
+#define cPin2 9 // H bridge cotronl pin 2 for left motor
 #define cPin3 6
 #define cPin4 5
 
@@ -71,9 +71,11 @@ class Robot {
         int userSpeed = 0;
         int health = 100;
         int forwardDistance = 0;
+        uint16_t rightwardDistance = 0;
         void updateState();
         void startup();
         void action();
+        void printState();
         bool leftForward = true;
         bool rightForward = true;
         float bearing;

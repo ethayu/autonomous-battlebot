@@ -164,8 +164,7 @@ void Sensors::updateLocalization(){
   bearing = atan2(dy, dx);
   x = (x1 + x2) / 2;
   y = (y1 + y2) / 2;
-  Serial.print("x: "); Serial.print(x); Serial.print(" y: "); Serial.print(y); Serial.print(" bearing: "); Serial.println(bearing);
-}
+  }
 
 void Sensors::updateRightwardDistance(){
   uint16_t distance = analogRead(PSD_PIN);
@@ -175,10 +174,14 @@ void Sensors::updateRightwardDistance(){
 
 void Sensors::updateForwardDistance(){
   if (tofSensor.dataReady()) {
-    uint16_t newDist = tofSensor.distance();
-    Serial.print("Distance (mm): "); Serial.println(distance); //DEBUG
-    tofSensor.clearInterrupt();
+    int newDist = tofSensor.distance();
+    if (newDist == -1) {
+      Serial.print(F("Couldn't get distance: "));
+      Serial.println(tofSensor.vl_status);
+      return;
+    }
     forwardDistance = newDist;
+    tofSensor.clearInterrupt();
   }
 }
 
@@ -192,23 +195,36 @@ void Sensors::updateState(){
 }
 
 void Sensors::startup(){
+  Wire.begin(SDA_PIN, SCL_PIN);
   vive1 = new Vive510(SIGNALPIN1);
   vive2 = new Vive510(SIGNALPIN2);
-  tofSensor = Adafruit_VL53L1X(TOPHAT_XSHUT_PIN, IRQ_PIN);
   pinMode(TOPHAT_XSHUT_PIN, OUTPUT);
-  pinMode(TOF_XSHUT_PIN, OUTPUT);
   digitalWrite(TOPHAT_XSHUT_PIN, LOW);
-  digitalWrite(TOF_XSHUT_PIN, LOW);
   pinMode(leftEncodePinA, INPUT_PULLUP);
   pinMode(leftEncodePinB, INPUT_PULLUP);
   pinMode(rightEncodePinA, INPUT_PULLUP);
   pinMode(rightEncodePinB, INPUT_PULLUP);
   vive1->begin();
   vive2->begin();
-  Wire.begin(SDA_PIN, SCL_PIN, 40000);
-  tofSensor.begin(TOF_I2C_ADDR, &Wire);
-  tofSensor.startRanging();
+  if (!tofSensor.begin(TOF_I2C_ADDR, &Wire)) {
+    Serial.print(F("Error on init of VL sensor: "));
+    Serial.println(tofSensor.vl_status);
+    while (1)       delay(10);
+  }
+  Serial.println(F("VL53L1X sensor OK!"));
+  Serial.print(F("Sensor ID: 0x"));
+  Serial.println(tofSensor.sensorID(), HEX);
+
+  if (! tofSensor.startRanging()) {
+    Serial.print(F("Couldn't start ranging: "));
+    Serial.println(tofSensor.vl_status);
+    while (1)       delay(10);
+  }
+  Serial.println(F("Ranging started"));
+
   tofSensor.setTimingBudget(15);
+  Serial.print(F("Timing budget (ms): "));
+  Serial.println(tofSensor.getTimingBudget());
 
   attachInterrupt(digitalPinToInterrupt(leftEncodePinA), leftUpdateEncoderA, CHANGE);
   attachInterrupt(digitalPinToInterrupt(leftEncodePinB), leftUpdateEncoderB, CHANGE);

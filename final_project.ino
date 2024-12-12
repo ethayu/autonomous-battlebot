@@ -18,5 +18,6 @@ void loop() {
   h.serve();
   robot.updateState();
   robot.action();
+  robot.printState();
   delay(1000 * fidelity);
 }

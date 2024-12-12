@@ -28,7 +28,7 @@ void press(){
       Serial.println("Pressed Right");
       break;
     default:
-      Serial.printf("invalid release state %d\n", state); 
+      Serial.printf("invalid release state %d\n", robot.state); 
       break;
   }
 }
@@ -53,7 +53,7 @@ void release(){
       Serial.println("Released Right");
       break;
     default:
-      Serial.printf("invalid release state %d\n", state); 
+      Serial.printf("invalid release state %d\n", robot.state); 
       break;
   }
 }
