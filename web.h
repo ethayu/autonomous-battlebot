@@ -74,7 +74,12 @@ const char body[] PROGMEM = R"===(
             console.log(direction + " pressed");
           }
         };
-        var req = "press?val=" + direction;
+        var req = "press?val=";
+        if (activeKeys["w"] == 1) req += "w";
+        if (activeKeys["a"] == 1) req += "a";
+        if (activeKeys["s"] == 1) req += "s";
+        if (activeKeys["d"] == 1) req += "d";
+        console.log(req);
         xhttp.open("GET", req, true);
         xhttp.send();
       }
@@ -87,7 +92,12 @@ const char body[] PROGMEM = R"===(
             console.log(direction + " released");
           }
         };
-        var req = "release?val=" + direction;
+        var req = "press?val=";
+        if (activeKeys["w"] == 1) req += "w";
+        if (activeKeys["a"] == 1) req += "a";
+        if (activeKeys["s"] == 1) req += "s";
+        if (activeKeys["d"] == 1) req += "d";
+        console.log(req);
         xhttp.open("GET", req, true);
         xhttp.send();
       }
@@ -101,13 +111,13 @@ const char body[] PROGMEM = R"===(
       };
 
       // Track pressed keys to prevent duplicate events
-      const activeKeys = {};
+      const activeKeys = {"w": 0, "a": 0, "s": 0, "d": 0};
 
       // Add event listeners for keydown and keyup
       document.addEventListener("keydown", (event) => {
         const key = event.key.toLowerCase();
-        if (key in keyDirectionMap && !activeKeys[key]) {
-          activeKeys[key] = true; // Mark the key as active
+        if (key in keyDirectionMap && activeKeys[key] == 0) {
+          activeKeys[key] = 1; // Mark the key as active
           directionPress(keyDirectionMap[key]);
         }
       });
@@ -115,7 +125,7 @@ const char body[] PROGMEM = R"===(
       document.addEventListener("keyup", (event) => {
         const key = event.key.toLowerCase();
         if (key in keyDirectionMap) {
-          activeKeys[key] = false; // Mark the key as inactive
+          activeKeys[key] = 0; // Mark the key as inactive
           directionRelease(keyDirectionMap[key]);
         }
       });

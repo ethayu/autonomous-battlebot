@@ -11,22 +11,23 @@ Content-type:text/plain
 class HTML510Server
 {
 private:
-WiFiClient client;
-WiFiServer server;
+    WiFiClient client;
+    WiFiServer server;
 #define MAXHANDLERS 30
-int numHandler=0;
-void (*handlerptrs[MAXHANDLERS])();
-String handlerpars[MAXHANDLERS];
+    int numHandler = 0;
+    void (*handlerptrs[MAXHANDLERS])();
+    String handlerpars[MAXHANDLERS];
+
 public:
-HTML510Server(int port): server(port) // default constructor
-{
-}
-void begin(int port=80);
-void attachHandler(String key, void (*handler)());
-void serve();
-void sendhtml(String data) ;
-void sendplain(String data);
-String getText();
-int getVal();
+    HTML510Server(int port) : server(port) // default constructor
+    {
+    }
+    void begin(int port = 80);
+    void attachHandler(String key, void (*handler)());
+    void serve();
+    void sendhtml(String data);
+    void sendplain(String data);
+    String getText();
+    int getVal();
 };
 #endif
