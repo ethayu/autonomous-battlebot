@@ -5,13 +5,13 @@
 
 #define MAX_PWM 16382
 
-#define pwmPin1 33 // PWM pin for left motor
-#define pwmPin2 16
+#define pwmPin1 16 // PWM pin for left motor
+#define pwmPin2 33
 
-#define cPin1 34 // H bridge control pin 1 for left motor
-#define cPin2 37 // H bridge cotronl pin 2 for left motor
-#define cPin3 10
-#define cPin4 17
+#define cPin1 10 // H bridge control pin 1 for left motor
+#define cPin2 17 // H bridge cotronl pin 2 for left motor
+#define cPin3 37
+#define cPin4 34
 
 #define resolution 14
 #define rRPMRange (state == 2 || state == 3) ? 7554 : 7090
@@ -74,7 +74,7 @@ public:
     int lSpeed = 0;
     int rSpeed = 0;
     int userSpeed = 50;
-    int health = 100;
+    uint8_t health = 100;
     int forwardDistance = 0;
     uint16_t rightwardDistance = 0;
     void updateState();

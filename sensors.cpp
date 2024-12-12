@@ -18,25 +18,25 @@ unsigned long rightLastTime = 0;
 void Sensors::updateHealth()
 {
   unsigned long currentTime = millis();
-  if (currentTime - lastHealthUpdate > 2 * 1000)
+  if (currentTime - lastHealthUpdate > 5 * 100 || true)
   {
-    lastHealthUpdate = currentTime;
-    uint8_t bytesReceived = Wire.requestFrom(TOPHAT_I2C_ADDR, 1);
-    uint8_t byteIn = 0;
-
-    if (bytesReceived > 0)
+    Wire1.beginTransmission(TOPHAT_I2C_ADDR); 
+    Wire1.write(2);                      
+    Wire1.endTransmission();
+    Serial.println(Wire1.requestFrom(TOPHAT_I2C_ADDR, 1));
+    if (Wire1.available())
     {
-      Serial.print("Received from slave: ");
-      while (Wire.available())
-      {
-        byteIn = Wire.read();
-        Serial.printf("0x%02X ", byteIn);
-      }
-      Serial.println();
-      health = byteIn;
+      char byte1 = Wire1.read();
+      Serial.print("Received number: ");
+      Serial.println(byte1);
+      health = byte1;
     }
+    else
+    {
+      Serial.println("Error: Not enough data received");
+    }
+    lastHealthUpdate = currentTime;
   }
-  health = 0;
 }
 
 uint32_t med3filt(uint32_t a, uint32_t b, uint32_t c)
@@ -246,6 +246,7 @@ void Sensors::updateState()
 void Sensors::startup()
 {
   Wire.begin(SDA_PIN, SCL_PIN);
+  Wire1.begin(35, 36, 2);
   vive1 = new Vive510(SIGNALPIN1);
   vive2 = new Vive510(SIGNALPIN2);
   pinMode(TOPHAT_XSHUT_PIN, OUTPUT);

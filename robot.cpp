@@ -5,6 +5,7 @@
 Robot robot;
 void Robot::setLeftSpeed(int speed)
 {
+  if (!leftForward) rightRPM *= -1;
   if (speed < 0)
   {
     speed *= -1;
@@ -40,8 +41,8 @@ void Robot::setLeftSpeed(int speed)
 
     int pidOutput = proportional + integralTerm + derivativeTerm;
     pidOutput = constrain(pidOutput, 0, lRPMRange);
-    // Serial.print("Left: ");
-    // plotData(leftRPM, targetRPM, error, proportional, integralTerm, derivativeTerm, pidOutput);
+    Serial.print("Left: ");
+    plotData(leftRPM, targetRPM, error, proportional, integralTerm, derivativeTerm, pidOutput);
 
     previousErrorLeft = error;
 
@@ -54,6 +55,7 @@ void Robot::setLeftSpeed(int speed)
 
 void Robot::setRightSpeed(int speed)
 {
+  if (!rightForward) rightRPM *= -1;
   if (speed < 0)
   {
     speed *= -1;
@@ -90,7 +92,7 @@ void Robot::setRightSpeed(int speed)
     int pidOutput = proportional + integralTerm + derivativeTerm;
     pidOutput = constrain(pidOutput, 0, rRPMRange);
 
-    // Serial.print("Right: ");
+    Serial.print("Right: ");
     plotData(rightRPM, targetRPM, error, proportional, integralTerm, derivativeTerm, pidOutput);
     previousErrorRight = error;
 
@@ -198,16 +200,7 @@ void Robot::action()
     break;
   }
   if (state <= 4)
-  {Serial.print("{ ");
-    
-    // Iterate through the set
-    for (int value : activeKeys) {
-        Serial.print(value);
-        Serial.print(" ");
-    }
-    
-    // End with a closing bracket
-    Serial.println("}");
+  {
     if (!activeKeys.empty())
     {
       float leftSpeed = 0;

@@ -14,8 +14,8 @@
 
 #define SDA_PIN 8
 #define SCL_PIN 9
-#define IRQ_PIN -1
-#define TOPHAT_I2C_ADDR -1
+#define IRQ_PIN 4
+#define TOPHAT_I2C_ADDR 0x28
 #define TOF_I2C_ADDR 0x29
 #define TOF_XSHUT_PIN 5
 #define TOPHAT_XSHUT_PIN 4
