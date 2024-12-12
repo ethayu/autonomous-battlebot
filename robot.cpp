@@ -108,6 +108,131 @@ void Robot::rightWheelBackward(){
   rightForward = false;
 }
 
+//AUTONOMOUS FUNCTIONS
+
+int distTolerance = 50; //tolerance of target region
+int wallFTolerance = 100; //forward tolerance
+int wallRTolerance = 100; //right sensor tolerance
+int wallRLowerTol = 50;
+float bearingTolerance = .2; //tolerance of bearing
+
+//math helper functions
+int euclideanDist(x1, y1, x2, y2) {
+  int dist = sqrt(sq(x2 - x1) + sq(y2 - y1));
+  return dist;
+}
+
+float calcAngle(int x1, int y1, int x2, int y2) {
+  float angle = atan2((y2 - y1), (x2 - x1));
+  if (angle < 0) {
+    angle = 2*PI + angle;
+  }
+  return angle;
+}
+
+boolean similarAngle(float angle1, float angle2, float tolerance) {
+  double diff = ( angle2 - angle1 + 180 ) % 360 - 180;
+  return (diff < -180 ? diff + 360 : diff) < tolerance;
+}
+
+boolean similarDist(dist1, dist2, tolerance) {
+  return abs(dist1 - dist2) < tolerance;
+}
+
+boolean hasReachedTarget(int targetX, int targetY) {
+  return euclideanDist(currX, currY, targetX, targetY) < distTolerance;
+}
+
+void turnToBearing(float targetBearing) {
+  if (similarAngle(currOrient, targetBearing, bearingTolerance)) {
+    moveForward();
+  } else {
+    if (currOrient < targetBearing) {
+      if (targetBearing - currOrient < PI) {
+        turnRight();
+      } else {
+        turnLeft();
+      }
+    } else {
+      if (currOrient - targetBearing < PI) {
+        turnLeft();
+      } else {
+        turnRight();
+      }
+    }
+  }
+}
+
+//Wallfollowing Motor Controls
+int pathFindSpeed = 20;
+void moveForward() {
+  setLeftSpeed(pathFindSpeed);
+  setRightSpeed(pathFindSpeed);
+}
+
+void turnLeft() {
+  setRightSpeed(pathFindSpeed);
+  setLeftSpeed(-pathFindSpeed);
+}
+
+void turnRight() {
+  setRightSpeed(-pathFindSpeed);
+  setLeftSpeed(pathFindSpeed);
+}
+
+boolean prepareForWallFollow = false;
+
+//Pathfinding behaviors
+void straightFind(targetX, targetY) {
+  if (similarAngle(currOrient, calcAngle(currX, currY, targetX, targetY, bearingTolerance) || prepareForWallFollow) {) {
+    if(forwardDistance > wallFTolerance && !prepareForWallFollow) {
+      moveForward(); 
+    } else if (rightwardDistance > wallFTolerance) { //we want right dist to be equal to forward gap
+      turnLeft(); // turn left to avoid obstacle
+      prepareForWallFollow = true;
+    }
+    else {
+      pathFindState = 2; // obstacle ahead, switch to wall follow
+    }
+  } else {
+    turnToBearing(calcAngle(currX, currY, targetX, targetY)); // turn to target bearing to start bearing
+  }
+}
+
+void wallFollow(targetX, targetY) {
+  if(!similarAngle(currOrient, calcAngle(currX, currY, targetX, targetY))) {
+    if (rightDist() < wallRLowerTolerance) {
+      turnLeft();
+    } else if (rightDist() > wallRTolerance) {
+      turnRight();
+    } else {
+      moveForward();
+    }
+  } else {
+    pathFindState = 1;
+  }
+}
+
+int pathFindState = 1;//needs to be initiliazed at start.
+
+void Robot::pathFind(int targetX, int targetY, float targetBearing){
+  int currX = robot.x;
+  int currY = robot.y;
+  int currOrient = robot.bearing;
+  if (!hasReachedTarget(targetX, targetY)) {
+    if (pathFindState == 1) {
+      straightFind(targetX, targetY);
+    } else if (pathFindState == 2) {
+      wallFollow(targetX, targetY);
+    } else {
+      Serial.println("Invalid pathfind state"); // debug
+    }
+  } else() {
+    pathFindState = 0;
+    robot.state = 0;//pathfind complete
+  }
+}
+
 void Robot::updateState(){
     sensors.updateState();
     health = sensors.health;
@@ -180,6 +305,11 @@ void Robot::action(){
       //    wall follow
       //  if we are oriented to target and nothing is in the way:
       //    move forward
+      pathFindState = 1;
+      int targetX = 4000;
+      int targetY = 4000;
+      float targetBearing = 0;
+      pathFind(targetX, targetY, targetBearing);
       break;
     case 6:
       //TODO: attack nearest target
