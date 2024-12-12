@@ -3,6 +3,8 @@
 #define PI 3.14159265
 Robot robot;
 void Robot::setLeftSpeed(int speed) {
+  Serial.print("Setting left speed to");
+  Serial.println(speed);
   if (speed == 0) {
     ledcWrite(pwmPin1, 0);
     previousErrorLeft = 0;
@@ -108,6 +110,7 @@ void Robot::updateState(){
     double rotated_cy = cx * sin(bearing) + cy * cos(bearing);
     x = sensors.x + rotated_cx;
     y = sensors.y + rotated_cy;
+    forwardDistance = sensors.forwardDistance;
 }
 
 void Robot::startup(){

@@ -70,6 +70,7 @@ class Robot {
         int rSpeed = 0;
         int userSpeed = 0;
         int health = 100;
+        int forwardDistance = 0;
         void updateState();
         void startup();
         void action();
