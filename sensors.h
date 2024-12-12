@@ -19,6 +19,8 @@
 
 #define I2C_TOF_ADDR 0x29 // I2C TOF
 
+#define PSD_PIN 1 // pin receiving signal from PSD sensor
+
 uint32_t med3filt(uint32_t a, uint32_t b, uint32_t c);
 
 class Sensors {
@@ -36,7 +38,7 @@ class Sensors {
         void updateRightSpeed();
         void updateLocalization();
         void updateForwardDistance();
-        // void updateRightwardDistance();
+        void updateRightwardDistance();
         int x1 = 0;
         int y1 = 0;
         int x2 = 0;
@@ -53,7 +55,7 @@ class Sensors {
         float x = 0;
         float y = 0;
         int forwardDistance = 0;
-        // int rightwardDistance = 0;
+        int rightwardDistance = 0;
 };
 
 void plotData(int currentSpeed, int desiredSpeed, float error, float proportional, float integralTerm, float derivativeTerm, int pidOutput);

@@ -167,18 +167,19 @@ void Sensors::updateLocalization(){
   Serial.print("x: "); Serial.print(x); Serial.print(" y: "); Serial.print(y); Serial.print(" bearing: "); Serial.println(bearing);
 }
 
-// void Sensors::updateRightwardDistance(){
-//   uint16_t distance = tofSensor.distance();
-//   // Serial.print("Distance (mm): "); Serial.println(distance); DEBUG
-//   tofSensor.clearInterrupt();
-//   return distance;
-// }
+void Sensors::updateRightwardDistance(){
+  uint16_t distance = analogRead(PSD_PIN);
+  distance = 10 * 29.988 * pow(map(distance, 0, 4095, 0, 5000)/1000.0, -1.173);
+  rightwardDistance = distance; //mm
+}
 
 void Sensors::updateForwardDistance(){
   uint16_t newDist = tofSensor.distance();
   Serial.print("Distance (mm): "); Serial.println(distance); DEBUG
   tofSensor.clearInterrupt();
   forwardDistance = newDist;
+  tofSensor.clearInterrupt();
+
 }
 
 void Sensors::updateState(){
@@ -187,6 +188,7 @@ void Sensors::updateState(){
   updateRightSpeed();
   updateLocalization();
   updateForwardDistance();
+  updateRightwardDistance();
 }
 
 void Sensors::startup(){
