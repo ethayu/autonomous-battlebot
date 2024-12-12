@@ -16,7 +16,7 @@ void Sensors::updateHealth(){
   unsigned long currentTime = millis(); 
   if (currentTime - lastHealthUpdate > 2 * 1000) {
     lastHealthUpdate = currentTime;
-    uint8_t bytesReceived = Wire.requestFrom(I2C_SLAVE_ADDR, 1);
+    uint8_t bytesReceived = Wire.requestFrom(TOPHAT_I2C_ADDR, 1);
     uint8_t byteIn = 0;
 
     if (bytesReceived > 0) {
@@ -174,12 +174,12 @@ void Sensors::updateRightwardDistance(){
 }
 
 void Sensors::updateForwardDistance(){
-  uint16_t newDist = tofSensor.distance();
-  Serial.print("Distance (mm): "); Serial.println(distance); DEBUG
-  tofSensor.clearInterrupt();
-  forwardDistance = newDist;
-  tofSensor.clearInterrupt();
-
+  if (tofSensor.dataReady()) {
+    uint16_t newDist = tofSensor.distance();
+    Serial.print("Distance (mm): "); Serial.println(distance); //DEBUG
+    tofSensor.clearInterrupt();
+    forwardDistance = newDist;
+  }
 }
 
 void Sensors::updateState(){
@@ -192,9 +192,13 @@ void Sensors::updateState(){
 }
 
 void Sensors::startup(){
-  vive1 = new Vive510(SIGNALPIN2);
+  vive1 = new Vive510(SIGNALPIN1);
   vive2 = new Vive510(SIGNALPIN2);
-  tofSensor = Adafruit_VL53L1X();
+  tofSensor = Adafruit_VL53L1X(TOPHAT_XSHUT_PIN, IRQ_PIN);
+  pinMode(TOPHAT_XSHUT_PIN, OUTPUT);
+  pinMode(TOF_XSHUT_PIN, OUTPUT);
+  digitalWrite(TOPHAT_XSHUT_PIN, LOW);
+  digitalWrite(TOF_XSHUT_PIN, LOW);
   pinMode(leftEncodePinA, INPUT_PULLUP);
   pinMode(leftEncodePinB, INPUT_PULLUP);
   pinMode(rightEncodePinA, INPUT_PULLUP);
@@ -202,9 +206,9 @@ void Sensors::startup(){
   vive1->begin();
   vive2->begin();
   Wire.begin(SDA_PIN, SCL_PIN, 40000);
-  tofSensor.begin(I2C_TOF_ADDR, &Wire);
+  tofSensor.begin(TOF_I2C_ADDR, &Wire);
   tofSensor.startRanging();
-  tofSensor.setTimingBudget(50);
+  tofSensor.setTimingBudget(15);
 
   attachInterrupt(digitalPinToInterrupt(leftEncodePinA), leftUpdateEncoderA, CHANGE);
   attachInterrupt(digitalPinToInterrupt(leftEncodePinB), leftUpdateEncoderB, CHANGE);
