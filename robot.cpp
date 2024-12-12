@@ -3,6 +3,15 @@
 #define PI 3.14159265
 Robot robot;
 void Robot::setLeftSpeed(int speed) {
+  if (speed < 0) {
+    speed *= -1;
+    if (leftForward) leftWheelBackward();
+  } else {
+    if (!leftForward) {
+      leftWheelForward();
+      leftRPM = -1 * leftRPM;
+    }
+  }
   if (speed == 0) {
     ledcWrite(pwmPin1, 0);
     previousErrorLeft = 0;
@@ -35,6 +44,15 @@ void Robot::setLeftSpeed(int speed) {
 }
 
 void Robot::setRightSpeed(int speed) {
+  if (speed < 0) {
+    speed *= -1;
+    if (rightForward) rightWheelBackward();
+  } else {
+    if (!rightForward) {
+      rightWheelForward();
+      rightRPM = -1 * rightRPM;
+    }
+  }
   if (speed == 0) {
     ledcWrite(pwmPin2, 0);
     previousErrorRight = 0;
@@ -133,23 +151,24 @@ void Robot::startup(){
 void Robot::action(){
   switch (state) {
     case 0:
-      //do nothing
+      setLeftSpeed(0);
+      setRightSpeed(0);
       break;
     case 1:
-      leftWheelForward();
-      rightWheelForward();
+      setLeftSpeed(userSpeed);
+      setRightSpeed(userSpeed);
       break;
     case 2:
-      leftWheelBackward();
-      rightWheelBackward();
+      setLeftSpeed(-1 * userSpeed);
+      setRightSpeed(-1 * userSpeed);
       break;
     case 3:
-      leftWheelBackward();
-      rightWheelForward();
+      setLeftSpeed(-1 * userSpeed);
+      setRightSpeed(userSpeed);
       break;
     case 4:
-      leftWheelForward();
-      rightWheelBackward();
+      setLeftSpeed(userSpeed);
+      setRightSpeed(-1 * userSpeed);
       break;
     case 5:
       //TODO: navigate to inputted x, y position (wall following)
@@ -175,15 +194,7 @@ void Robot::action(){
       //Serial.printf("invalid state %d\n", state); 
       break;
   }
-  if (state <= 4) {
-    if (state == 0) {
-      setLeftSpeed(0);
-      setRightSpeed(0);
-    } else {
-      setLeftSpeed(userSpeed);
-      setRightSpeed(userSpeed);
-    }
-  } else {
+  if (state > 4) { // autonomous mode
     setLeftSpeed(lSpeed);
     setRightSpeed(rSpeed);
   }
