@@ -1,5 +1,4 @@
 #include "sensors.h"
-
 #include <math.h>       
 #define PI 3.14159265
 
@@ -165,6 +164,21 @@ void Sensors::updateLocalization(){
   bearing = atan2(dy, dx);
   x = (x1 + x2) / 2;
   y = (y1 + y2) / 2;
+  Serial.print("x: "); Serial.print(x); Serial.print(" y: "); Serial.print(y); Serial.print(" bearing: "); Serial.println(bearing);
+}
+
+// void Sensors::updateRightwardDistance(){
+//   uint16_t distance = tofSensor.distance();
+//   // Serial.print("Distance (mm): "); Serial.println(distance); DEBUG
+//   tofSensor.clearInterrupt();
+//   return distance;
+// }
+
+void Sensors::updateForwardDistance(){
+  uint16_t newDist = tofSensor.distance();
+  Serial.print("Distance (mm): "); Serial.println(distance); DEBUG
+  tofSensor.clearInterrupt();
+  forwardDistance = newDist;
 }
 
 void Sensors::updateState(){
@@ -172,11 +186,13 @@ void Sensors::updateState(){
   updateLeftSpeed();
   updateRightSpeed();
   updateLocalization();
+  updateForwardDistance();
 }
 
 void Sensors::startup(){
   vive1 = new Vive510(SIGNALPIN2);
   vive2 = new Vive510(SIGNALPIN2);
+  tofSensor = Adafruit_VL53L1X();
   pinMode(leftEncodePinA, INPUT_PULLUP);
   pinMode(leftEncodePinB, INPUT_PULLUP);
   pinMode(rightEncodePinA, INPUT_PULLUP);
@@ -184,6 +200,10 @@ void Sensors::startup(){
   vive1->begin();
   vive2->begin();
   Wire.begin(SDA_PIN, SCL_PIN, 40000);
+  tofSensor.begin(I2C_TOF_ADDR, &Wire);
+  tofSensor.startRanging();
+  tofSensor.setTimingBudget(50);
+
   attachInterrupt(digitalPinToInterrupt(leftEncodePinA), leftUpdateEncoderA, CHANGE);
   attachInterrupt(digitalPinToInterrupt(leftEncodePinB), leftUpdateEncoderB, CHANGE);
   attachInterrupt(digitalPinToInterrupt(rightEncodePinA), rightUpdateEncoderA, CHANGE);
