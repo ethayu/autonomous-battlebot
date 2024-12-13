@@ -5,20 +5,7 @@
 Robot robot;
 void Robot::setLeftSpeed(int speed)
 {
-  if (!leftForward) rightRPM *= -1;
-  if (speed < 0)
-  {
-    speed *= -1;
-    if (leftForward)
-      leftWheelBackward();
-  }
-  else
-  {
-    if (!leftForward)
-    {
-      leftWheelForward();
-    }
-  }
+  lSpeed = speed;
   if (speed == 0)
   {
     ledcWrite(pwmPin1, 0);
@@ -27,8 +14,20 @@ void Robot::setLeftSpeed(int speed)
   }
   else
   {
+    if (speed < 0)
+    {
+      if (leftForward)
+        leftWheelBackward();
+    }
+    else
+    {
+      if (!leftForward)
+      {
+        leftWheelForward();
+      }
+    }
     float dt = (millis() - lte) / 1000.0;
-    int targetRPM = map(speed, 0, 100, 0, lRPMRange);
+    int targetRPM = map(speed, -100, 100, -1 * lRPMRange, lRPMRange);
     float error = targetRPM - leftRPM;
 
     float proportional = lkp * error;
@@ -40,12 +39,20 @@ void Robot::setLeftSpeed(int speed)
     float derivativeTerm = lkd * derivative;
 
     int pidOutput = proportional + integralTerm + derivativeTerm;
-    pidOutput = constrain(pidOutput, 0, lRPMRange);
+    pidOutput = constrain(pidOutput, -1 * lRPMRange, lRPMRange);
     Serial.print("Left: ");
     plotData(leftRPM, targetRPM, error, proportional, integralTerm, derivativeTerm, pidOutput);
 
     previousErrorLeft = error;
 
+    if (targetRPM < 0)
+    {
+      pidOutput *= -1;
+      if (leftForward)
+        leftWheelBackward();
+    }
+    else if (!leftForward)
+      leftWheelForward();
     pidOutput = map(pidOutput, 0, lRPMRange, 0, MAX_PWM);
 
     ledcWrite(pwmPin1, pidOutput);
@@ -55,20 +62,7 @@ void Robot::setLeftSpeed(int speed)
 
 void Robot::setRightSpeed(int speed)
 {
-  if (!rightForward) rightRPM *= -1;
-  if (speed < 0)
-  {
-    speed *= -1;
-    if (rightForward)
-      rightWheelBackward();
-  }
-  else
-  {
-    if (!rightForward)
-    {
-      rightWheelForward();
-    }
-  }
+  rSpeed = speed;
   if (speed == 0)
   {
     ledcWrite(pwmPin2, 0);
@@ -78,7 +72,7 @@ void Robot::setRightSpeed(int speed)
   else
   {
     float dt = (millis() - rte) / 1000.0;
-    int targetRPM = map(speed, 0, 100, 0, rRPMRange);
+    int targetRPM = map(speed, -100, 100, -1 * rRPMRange, rRPMRange);
     float error = targetRPM - rightRPM;
 
     float proportional = rkp * error;
@@ -90,12 +84,20 @@ void Robot::setRightSpeed(int speed)
     float derivativeTerm = rkd * derivative;
 
     int pidOutput = proportional + integralTerm + derivativeTerm;
-    pidOutput = constrain(pidOutput, 0, rRPMRange);
+    pidOutput = constrain(pidOutput, -1 * rRPMRange, rRPMRange);
 
     Serial.print("Right: ");
     plotData(rightRPM, targetRPM, error, proportional, integralTerm, derivativeTerm, pidOutput);
     previousErrorRight = error;
 
+    if (targetRPM < 0)
+    {
+      pidOutput *= -1;
+      if (rightForward)
+        rightWheelBackward();
+    }
+    else if (!rightForward)
+      rightWheelForward();
     pidOutput = map(pidOutput, 0, rRPMRange, 0, MAX_PWM);
 
     ledcWrite(pwmPin2, pidOutput);
@@ -161,6 +163,8 @@ void Robot::startup()
 {
   ledcAttach(pwmPin1, 30, resolution);
   ledcAttach(pwmPin2, 30, resolution);
+  ledcAttach(servoPin1, 30, resolution);
+  ledcAttach(servoPin2, 30, resolution);
 
   pinMode(cPin1, OUTPUT);
   pinMode(cPin2, OUTPUT);
@@ -181,9 +185,6 @@ void Robot::action()
   switch (state)
   {
   case 5:
-    target_x = 4000;
-    target_y = 4000;
-    target_bearing = PI / 2;
     navTo();
     break;
   case 6:
@@ -217,13 +218,29 @@ void Robot::action()
       }
       if (activeKeys.contains(3))
       {
-        leftSpeed -= 0.5;
-        rightSpeed += 0.5;
+        if (activeKeys.contains(1) || !activeKeys.contains(4))
+        {
+          leftSpeed -= 0.5;
+          rightSpeed += 0.5;
+        }
+        else if (activeKeys.contains(2) && !activeKeys.contains(4))
+        {
+          leftSpeed += 0.5;
+          rightSpeed -= 0.5;
+        }
       }
       if (activeKeys.contains(4))
       {
-        leftSpeed += 0.5;
-        rightSpeed -= 0.5;
+        if (activeKeys.contains(1) || !activeKeys.contains(3))
+        {
+          leftSpeed += 0.5;
+          rightSpeed -= 0.5;
+        } 
+        else if (activeKeys.contains(2) && !activeKeys.contains(3))
+        {
+          leftSpeed -= 0.5;
+          rightSpeed += 0.5;
+        }
       }
       int mag = std::max(abs(leftSpeed), abs(rightSpeed));
       if (mag == 0)
@@ -232,7 +249,7 @@ void Robot::action()
         setRightSpeed(0);
       }
       else
-      { 
+      {
         setLeftSpeed(userSpeed * leftSpeed / mag);
         setRightSpeed(userSpeed * rightSpeed / mag);
       }
@@ -248,6 +265,20 @@ void Robot::action()
     setLeftSpeed(lSpeed);
     setRightSpeed(rSpeed);
   }
+  if (attacking)
+  {
+    if (servoDirection) {
+      servoAngle += 5;
+      if (servoAngle >= 180)
+        servoDirection = false;
+    } else {
+      servoAngle -= 5;
+      if (servoAngle <= 0)
+        servoDirection = true;
+    }
+    ledcWrite(servoPin1, map(servoAngle, 0, 180, 0, MAX_PWM));
+    ledcWrite(servoPin2, map(servoAngle, 0, 180, 0, MAX_PWM));
+  }
 }
 
 void Robot::printState()
@@ -260,6 +291,10 @@ void Robot::printState()
   Serial.print(leftRPM);
   Serial.print(" Right RPM: ");
   Serial.print(rightRPM);
+  Serial.print(" Left Speed: ");
+  Serial.print(lSpeed);
+  Serial.print(" Right Speed: ");
+  Serial.print(rSpeed);
   Serial.print(" Bearing: ");
   Serial.print(bearing_deg);
   Serial.print(" x: ");

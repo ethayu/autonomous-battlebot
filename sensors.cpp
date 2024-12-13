@@ -20,20 +20,19 @@ void Sensors::updateHealth()
   unsigned long currentTime = millis();
   if (currentTime - lastHealthUpdate > 5 * 100 || true)
   {
-    Wire1.beginTransmission(TOPHAT_I2C_ADDR); 
-    Wire1.write(2);                      
-    Wire1.endTransmission();
-    Serial.println(Wire1.requestFrom(TOPHAT_I2C_ADDR, 1));
+    if (usedWifi) {
+      Wire1.beginTransmission(TOPHAT_I2C_ADDR); 
+      Wire1.write(1);                      
+      Wire1.endTransmission();
+      usedWifi = false;
+    }
+    Wire1.requestFrom(TOPHAT_I2C_ADDR, 1);
     if (Wire1.available())
     {
-      char byte1 = Wire1.read();
-      Serial.print("Received number: ");
+      uint8_t byte1 = Wire1.read();
+      Serial.printf("Recieved data: %d\n", byte1);
       Serial.println(byte1);
       health = byte1;
-    }
-    else
-    {
-      Serial.println("Error: Not enough data received");
     }
     lastHealthUpdate = currentTime;
   }
@@ -224,8 +223,6 @@ void Sensors::updateForwardDistance()
     int newDist = tofSensor.distance();
     if (newDist == -1)
     {
-      Serial.print(F("Couldn't get distance: "));
-      Serial.println(tofSensor.vl_status);
       return;
     }
     forwardDistance = newDist;

@@ -5,10 +5,10 @@
 #include "Adafruit_VL53L1X.h"
 #include "SharpIR.h"
 
-#define leftEncodePinA 14
-#define leftEncodePinB 13
-#define rightEncodePinA 1
-#define rightEncodePinB 2
+#define leftEncodePinA 14//19//14
+#define leftEncodePinB 13//18//13
+#define rightEncodePinA 1//7//1
+#define rightEncodePinB 2//0//2
 
 #define pulsesPerRevolution 11
 
@@ -61,6 +61,7 @@ public:
     float y = 0;
     int forwardDistance = 0;
     uint16_t rightwardDistance = 0;
+    bool usedWifi = false;
 };
 
 extern SharpIR psd_sensor;

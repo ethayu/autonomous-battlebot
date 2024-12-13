@@ -13,6 +13,9 @@ void setup()
   h.attachHandler("/press?val=", press);
   h.attachHandler("/release?val=", release);
   h.attachHandler("/speed?val=", getSpeed);
+  h.attachHandler("/nav", nav);
+  h.attachHandler("/startAttack", startAttack);
+  h.attachHandler("/stopAttack", stopAttack);
 }
 
 void loop()
@@ -20,6 +23,6 @@ void loop()
   h.serve();
   robot.updateState();
   robot.action();
-  robot.printState();
+  // robot.printState();
   delay(1000 * fidelity);
 }

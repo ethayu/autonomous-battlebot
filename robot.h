@@ -5,17 +5,20 @@
 
 #define MAX_PWM 16382
 
-#define pwmPin1 16 // PWM pin for left motor
-#define pwmPin2 33
+#define pwmPin1 16//1//16 // PWM pin for left motor
+#define pwmPin2 33//4//33
 
-#define cPin1 10 // H bridge control pin 1 for left motor
-#define cPin2 17 // H bridge cotronl pin 2 for left motor
-#define cPin3 37
-#define cPin4 34
+#define cPin1 10//8//10 // H bridge control pin 1 for left motor
+#define cPin2 17//9//17 // H bridge cotronl pin 2 for left motor
+#define cPin3 37//5//37
+#define cPin4 34//6//34
+
+#define servoPin1 -1
+#define servoPin2 -1
 
 #define resolution 14
-#define rRPMRange (state == 2 || state == 3) ? 7554 : 7090
-#define lRPMRange (state == 2 || state == 3) ? 7200 : 7090
+#define rRPMRange 7090
+#define lRPMRange 7090
 
 #define lku 0.85
 #define ltu 0.405
@@ -55,11 +58,10 @@ private:
     void rightWheelBackward();
     unsigned long lte = 0;
     unsigned long rte = 0;
-    int target_x = 1000;
-    int target_y = 1000;
-    float target_bearing = PI / 2;
     float wallFollowBearing = 0;
-    Sensors sensors;
+
+    int servoAngle = 0;
+    bool servoDirection = true;
 
     // Controls
     int substate;     // 0 = goto target, 1 = goto bearing, 2 = wall follow set up, 3 = wall follow
@@ -87,6 +89,11 @@ public:
     float bearing_deg;
     float x = 0;
     float y = 0;
+    int target_x = 1000;
+    int target_y = 1000;
+    float target_bearing = PI / 2;
+    Sensors sensors;
+    bool attacking = false;
 
     //web
     std::set<int> activeKeys;
