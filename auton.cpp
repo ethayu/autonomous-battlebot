@@ -50,7 +50,7 @@ void Robot::updateAutonState()
       if (rightwardDistance < closestDistance)
       {
         closestDistance = rightwardDistance;
-        target_bearing = modAngle(bearing - PI / 2); // TODO: confirm that clockwise is negative angle direction
+        target_bearing = modAngle(bearing - PI / 2);
       }
       if (closestDistance < wallFTolerance * 3 || similarAngle(robot.bearing, searchLimit, bearingTolerance))
       {

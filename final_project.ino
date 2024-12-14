@@ -1,5 +1,5 @@
-#include "config.h"
 #include "point.h"
+#include "config.h"
 #include "web.h"
 
 #define fidelity 0.05

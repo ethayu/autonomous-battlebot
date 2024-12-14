@@ -1,7 +1,6 @@
 #ifndef WEB_H
 #define WEB_H
 #include "config.h"
-
 #include "html510.h"
 #include "robot.h"
 extern HTML510Server h;
@@ -154,7 +153,7 @@ const char body[] PROGMEM = R"===(
           leftRPM = vals[2];
           rightRPM = vals[3];
           lSpeed = vals[4];
-          rSpeed = vals[5];
+          rSpeed = vals[5]; 
           bearing = vals[6];
           x = vals[7];
           y = vals[8];

@@ -7,26 +7,6 @@
 #include "Adafruit_VL53L1X.h"
 #include "SharpIR.h"
 
-#define leftEncodePinA 13//19
-#define leftEncodePinB 14//18
-#define rightEncodePinA 2//7//1
-#define rightEncodePinB 1//0//2
-
-#define pulsesPerRevolution 11
-
-#define SDA_PIN 8
-#define SCL_PIN 9
-#define IRQ_PIN 4
-#define TOPHAT_I2C_ADDR 0x28
-#define TOF_I2C_ADDR 0x29
-#define TOF_XSHUT_PIN 5
-#define TOPHAT_XSHUT_PIN 4
-#define SIGNALPIN1 4 // pin receiving signal from Vive circuit
-#define SIGNALPIN2 2 // pin receiving signal from Vive circuit
-
-#define PSD_PIN 11 // pin receiving signal from PSD sensor
-#define PSD_model 1080
-
 uint32_t med3filt(uint32_t a, uint32_t b, uint32_t c);
 
 class Sensors

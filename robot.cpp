@@ -1,5 +1,6 @@
 #include "robot.h"
 #include <cmath>
+#include "config.h"
 #define PI 3.14159265
 Robot robot;
 void Robot::setLeftSpeed(int speed)
@@ -160,8 +161,8 @@ void Robot::updateState()
 void Robot::startup()
 {
   #ifdef MOTORS
-  ledcAttach(pwmPin1, 30, resolution);
-  ledcAttach(pwmPin2, 30, resolution);
+  ledcAttach(pwmPin1, 30, PWM_RESOLUTION);
+  ledcAttach(pwmPin2, 30, PWM_RESOLUTION);
   pinMode(cPin1, OUTPUT);
   pinMode(cPin2, OUTPUT);
   pinMode(cPin3, OUTPUT);
@@ -174,8 +175,8 @@ void Robot::startup()
   rte = lte;
   #endif
   #ifdef ATTACK
-  ledcAttach(servoPin1, 30, resolution);
-  ledcAttach(servoPin2, 30, resolution);
+  ledcAttach(servoPin1, 30, PWM_RESOLUTION);
+  ledcAttach(servoPin2, 30, PWM_RESOLUTION);
   #endif
 
   sensors.startup();

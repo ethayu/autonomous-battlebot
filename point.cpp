@@ -1,5 +1,6 @@
 #include "point.h"
 #include "Arduino.h"
+#include "config.h"
 #include <cmath>
 
 float euclideanDist(int x1, int y1, int x2, int y2)
@@ -28,7 +29,7 @@ bool similarAngle(float angle1, float angle2, float tolerance)
 
 float modAngle(float angle)
 {
-  return fmod(angle + PI, 2 * PI) - PI;
+  return fmod(angle + 3 * PI, 2 * PI) - PI;
 }
 
 bool hasReachedTarget(int currX, int currY, int targetX, int targetY)

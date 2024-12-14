@@ -5,42 +5,6 @@
 #include "sensors.h"
 #include <set>
 
-#define MAX_PWM 16382
-
-#define pwmPin1 17//1//16 // PWM pin for left motor
-#define pwmPin2 33//4//33
-
-#define cPin1 10//8//10 // H bridge control pin 1 for left motor
-#define cPin2 16//9//17 // H bridge cotronl pin 2 for left motor
-#define cPin3 37//5//37
-#define cPin4 34//6//34
-
-#define servoPin1 -1
-#define servoPin2 -1
-
-#define resolution 14
-#define rRPMRange 7090
-#define lRPMRange 7090
-
-#define lku 0.85
-#define ltu 0.405
-#define lti 0.5 * ltu
-#define ltd 0.125 * ltu
-#define lkp 0.6 * lku
-#define lki lkp / lti
-#define lkd lkp *ltd
-
-#define rku 0.85
-#define rtu 0.2
-#define rti 0.5 * rtu
-#define rtd 0.125 * rtu
-#define rkp 0.6 * rku
-#define rki rkp / rti
-#define rkd rkp *rtd
-
-#define cx 0
-#define cy 0
-
 class Robot
 {
 private:

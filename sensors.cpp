@@ -260,7 +260,7 @@ void Sensors::updateState()
 void Sensors::startup()
 {
   #ifdef TOPHAT
-  Wire1.begin(35, 36, 2);
+  Wire1.begin(TOPHAT_SDA_PIN, TOPHAT_SCL_PIN, TOPHAT_FREQ);
   pinMode(TOPHAT_XSHUT_PIN, OUTPUT);
   digitalWrite(TOPHAT_XSHUT_PIN, LOW);
   #endif
@@ -281,7 +281,7 @@ void Sensors::startup()
   attachInterrupt(digitalPinToInterrupt(rightEncodePinB), rightUpdateEncoderB, CHANGE);
   #endif
   #ifdef TOF
-  Wire.begin(SDA_PIN, SCL_PIN);
+  Wire.begin(TOF_SDA_PIN, TOF_SCL_PIN);
   if (!tofSensor.begin(TOF_I2C_ADDR, &Wire))
   {
     Serial.print(F("Error on init of VL sensor: "));
