@@ -5,11 +5,11 @@
 
 #define MAX_PWM 16382
 
-#define pwmPin1 16//1//16 // PWM pin for left motor
+#define pwmPin1 17//1//16 // PWM pin for left motor
 #define pwmPin2 33//4//33
 
 #define cPin1 10//8//10 // H bridge control pin 1 for left motor
-#define cPin2 17//9//17 // H bridge cotronl pin 2 for left motor
+#define cPin2 16//9//17 // H bridge cotronl pin 2 for left motor
 #define cPin3 37//5//37
 #define cPin4 34//6//34
 

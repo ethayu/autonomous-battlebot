@@ -16,6 +16,7 @@ void setup()
   h.attachHandler("/nav", nav);
   h.attachHandler("/startAttack", startAttack);
   h.attachHandler("/stopAttack", stopAttack);
+  h.attachHandler("/updateState", updateState);
 }
 
 void loop()
@@ -23,6 +24,6 @@ void loop()
   h.serve();
   robot.updateState();
   robot.action();
-  // robot.printState();
+  robot.printState();
   delay(1000 * fidelity);
 }

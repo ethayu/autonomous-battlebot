@@ -151,7 +151,7 @@ void Sensors::updateRightSpeed()
 
 void Sensors::updateLocalization()
 {
-  static uint16_t x, y;
+  static uint16_t l_x, l_y;
 
   if (vive1->status() == VIVE_RECEIVING)
   {
@@ -163,21 +163,27 @@ void Sensors::updateLocalization()
 
     x0 = vive1->xCoord();
     y0 = vive1->yCoord();
-    x = med3filt(x0, oldx1, oldx2);
-    y = med3filt(y0, oldy1, oldy2);
-    if (x > 8000 || y > 8000 || x < 1000 || y < 1000)
+    l_x = med3filt(x0, oldx1, oldx2);
+    l_y = med3filt(y0, oldy1, oldy2);
+    if (l_x > 8000 || l_y > 8000 || l_x < 1000 || l_y < 1000)
     {
-      x = 0;
-      y = 0;
+      l_x = 0;
+      l_y = 0;
     }
   }
   else
   {
-    x = 0;
-    y = 0;
+    l_x = 0;
+    l_y = 0;
     vive1->sync(5);
   }
-  x1 = x, y1 = y;
+  if (l_x != 0 && l_y != 0) {
+    x1 = l_x, y1 = l_y;
+  }
+  Serial.print("x1: ");
+  Serial.print(x1);
+  Serial.print(" y1: ");
+  Serial.println(y1);
 
   if (vive2->status() == VIVE_RECEIVING)
   {
@@ -189,21 +195,27 @@ void Sensors::updateLocalization()
 
     x0 = vive2->xCoord();
     y0 = vive2->yCoord();
-    x = med3filt(x0, oldx1, oldx2);
-    y = med3filt(y0, oldy1, oldy2);
-    if (x > 8000 || y > 8000 || x < 1000 || y < 1000)
+    l_x = med3filt(x0, oldx1, oldx2);
+    l_y = med3filt(y0, oldy1, oldy2);
+    if (l_x > 8000 || l_y > 8000 || l_x < 1000 || l_y < 1000)
     {
-      x = 0;
-      y = 0;
+      l_x = 0;
+      l_y = 0;
     }
   }
   else
   {
-    x = 0;
-    y = 0;
+    l_x = 0;
+    l_y = 0;
     vive2->sync(5);
   }
-  x2 = x, y2 = y;
+  if (l_x != 0 && l_y != 0) {
+    x2 = l_x, y2 = l_y;
+  }
+  Serial.print("x2: ");
+  Serial.print(x2);
+  Serial.print(" y2: ");
+  Serial.println(y2);
   float dx = x2 - x1;
   float dy = y2 - y1;
   bearing = atan2(dy, dx);
