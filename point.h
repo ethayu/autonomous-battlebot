@@ -1,5 +1,6 @@
 #ifndef POINT_H
 #define POINT_H
+#include "config.h"
 
 #define PI 3.14159265
 #define distTolerance 50   // tolerance of target region

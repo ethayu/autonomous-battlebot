@@ -1,5 +1,6 @@
 #ifndef SENSORS_H
 #define SENSORS_H
+#include "config.h"
 #include "vive510.h"
 #include "point.h"
 #include <Wire.h>

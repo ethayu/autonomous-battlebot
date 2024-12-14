@@ -179,7 +179,6 @@ void Sensors::updateLocalization()
   if (l_x != 0 && l_y != 0) {
     loc1.setPoint(l_x, l_y);
   }
-  loc1.print();
 
   if (vive2->status() == VIVE_RECEIVING)
   {
@@ -208,7 +207,10 @@ void Sensors::updateLocalization()
   if (l_x != 0 && l_y != 0) {
     loc2.setPoint(l_x, l_y);
   }
+  #ifdef DEBUG
+  loc1.print();
   loc2.print();
+  #endif
   float dx = loc2.x - loc1.x;
   float dy = loc2.y - loc1.y;
   bearing = atan2(dy, dx);
@@ -237,28 +239,49 @@ void Sensors::updateForwardDistance()
 
 void Sensors::updateState()
 {
+  #ifdef TOPHAT
   updateHealth();
+  #endif
+  #ifdef MOTORS
   updateLeftSpeed();
   updateRightSpeed();
+  #endif
+  #ifdef VIVE
   updateLocalization();
+  #endif
+  #ifdef TOF
   updateForwardDistance();
+  #endif
+  #ifdef PSD
   updateRightwardDistance();
+  #endif
 }
 
 void Sensors::startup()
 {
-  Wire.begin(SDA_PIN, SCL_PIN);
+  #ifdef TOPHAT
   Wire1.begin(35, 36, 2);
-  vive1 = new Vive510(SIGNALPIN1);
-  vive2 = new Vive510(SIGNALPIN2);
   pinMode(TOPHAT_XSHUT_PIN, OUTPUT);
   digitalWrite(TOPHAT_XSHUT_PIN, LOW);
+  #endif
+  #ifdef VIVE
+  vive1 = new Vive510(SIGNALPIN1);
+  vive2 = new Vive510(SIGNALPIN2);
+  vive1->begin();
+  vive2->begin();
+  #endif
+  #ifdef MOTORS
   pinMode(leftEncodePinA, INPUT_PULLUP);
   pinMode(leftEncodePinB, INPUT_PULLUP);
   pinMode(rightEncodePinA, INPUT_PULLUP);
   pinMode(rightEncodePinB, INPUT_PULLUP);
-  vive1->begin();
-  vive2->begin();
+  attachInterrupt(digitalPinToInterrupt(leftEncodePinA), leftUpdateEncoderA, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(leftEncodePinB), leftUpdateEncoderB, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(rightEncodePinA), rightUpdateEncoderA, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(rightEncodePinB), rightUpdateEncoderB, CHANGE);
+  #endif
+  #ifdef TOF
+  Wire.begin(SDA_PIN, SCL_PIN);
   if (!tofSensor.begin(TOF_I2C_ADDR, &Wire))
   {
     Serial.print(F("Error on init of VL sensor: "));
@@ -282,11 +305,7 @@ void Sensors::startup()
   tofSensor.setTimingBudget(15);
   Serial.print(F("Timing budget (ms): "));
   Serial.println(tofSensor.getTimingBudget());
-
-  attachInterrupt(digitalPinToInterrupt(leftEncodePinA), leftUpdateEncoderA, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(leftEncodePinB), leftUpdateEncoderB, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(rightEncodePinA), rightUpdateEncoderA, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(rightEncodePinB), rightUpdateEncoderB, CHANGE);
+  #endif
 }
 
 void plotData(int currentSpeed, int desiredSpeed, float error, float proportional, float integralTerm, float derivativeTerm, int pidOutput)

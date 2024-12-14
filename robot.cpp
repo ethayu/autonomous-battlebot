@@ -159,11 +159,9 @@ void Robot::updateState()
 
 void Robot::startup()
 {
+  #ifdef MOTORS
   ledcAttach(pwmPin1, 30, resolution);
   ledcAttach(pwmPin2, 30, resolution);
-  ledcAttach(servoPin1, 30, resolution);
-  ledcAttach(servoPin2, 30, resolution);
-
   pinMode(cPin1, OUTPUT);
   pinMode(cPin2, OUTPUT);
   pinMode(cPin3, OUTPUT);
@@ -172,10 +170,15 @@ void Robot::startup()
   rightWheelForward();
   setLeftSpeed(0);
   setRightSpeed(0);
-  sensors.startup();
-
   lte = millis();
   rte = lte;
+  #endif
+  #ifdef ATTACK
+  ledcAttach(servoPin1, 30, resolution);
+  ledcAttach(servoPin2, 30, resolution);
+  #endif
+
+  sensors.startup();
 }
 
 void Robot::action()

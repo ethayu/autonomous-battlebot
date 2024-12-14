@@ -1,5 +1,6 @@
 #ifndef AUTON_H
 #define AUTON_H
+#include "config.h"
 #include "robot.h"
 #define wallFTolerance 100 // forward tolerance
 #define wallRTolerance 100 // right sensor tolerance

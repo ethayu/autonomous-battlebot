@@ -1,5 +1,6 @@
 #ifndef WEB_H
 #define WEB_H
+#include "config.h"
 
 #include "html510.h"
 #include "robot.h"
@@ -166,7 +167,7 @@ const char body[] PROGMEM = R"===(
         document.getElementById("position").innerHTML = `x: ${x} | y: ${y} | Forward Distance: ${forwardDistance} | Rightward Distance: ${rightwardDistance}`;
       }
 
-      setInterval(updateState, 100);
+      setInterval(updateState, 10);
       
       // Function to Handle Button Press
       function directionPress(direction) {

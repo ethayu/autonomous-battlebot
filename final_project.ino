@@ -1,3 +1,4 @@
+#include "config.h"
 #include "point.h"
 #include "web.h"
 
@@ -26,7 +27,9 @@ void loop()
 {
   h.serve();
   robot.updateState();
+  #ifdef MOTORS
   robot.action();
+  #endif
   robot.printState();
   delay(1000 * fidelity);
 }
