@@ -255,4 +255,6 @@ void nav();
 void startAttack();
 void stopAttack();
 void updateState();
+void attackClosest();
+void attackStructure();
 #endif

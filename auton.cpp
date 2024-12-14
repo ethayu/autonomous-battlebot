@@ -1,85 +1,85 @@
 #include "auton.h"
-
 #include <cmath>
 
-// helper
-float euclideanDist(int x1, int y1, int x2, int y2)
+void Robot::updateAutonState()
 {
-  float dist = hypot(x2 - x1, y2 - y1);
-  return dist;
-}
-
-float calcAngle(int x1, int y1, int x2, int y2)
-{
-  float angle = atan2(y2 - y1, x2 - x1);
-  return angle;
-}
-
-bool similarAngle(float angle1, float angle2, float tolerance)
-{
-  angle1 = modAngle(angle1);
-  angle2 = modAngle(angle2);
-
-  float diff = fabs(angle1 - angle2);
-
-  diff = fmin(diff, 2 * PI - diff);
-
-  return diff <= tolerance;
-}
-
-float modAngle(float angle)
-{
-  return fmod(angle + PI, 2 * PI) - PI;
-}
-
-bool hasReachedTarget(int currX, int currY, int targetX, int targetY)
-{
-  return euclideanDist(currX, currY, targetX, targetY) < distTolerance;
-}
-
-void Robot::updateNavToState()
-{
-  if (hasReachedTarget(x, y, target_x, target_y))
+  switch (state)
   {
-    nav_substate = 4;
-  }
-  else
-  {
-    bool correctOrientation = similarAngle(robot.bearing, calcAngle(x, y, target_x, target_y), bearingTolerance);
-    if (forwardDistance > wallFTolerance) // if nothing in front
+    case 1: // navTo()
     {
-      if (nav_substate < 2 || correctOrientation || (nav_substate == 2 && similarAngle(robot.bearing, wallFollowBearing, bearingTolerance)))
-        nav_substate = correctOrientation ? 0 : 1;                      // if not wall following or in right direction, or was starting wall follow and got to end of turn search (obstacle probably moved)
-      else if (nav_substate == 2 && rightwardDistance < wallRTolerance) // we have reoriented
+      if (location.hasReachedPoint(target))
       {
-        nav_substate = 3;
+        substate = 4;
+      }
+      else
+      {
+        bool correctOrientation = similarAngle(robot.bearing, location.calcAngle(target), bearingTolerance);
+        if (forwardDistance > wallFTolerance) // if nothing in front
+        {
+          if (substate < 2 || correctOrientation || (substate == 2 && similarAngle(robot.bearing, searchLimit, bearingTolerance)))
+            substate = correctOrientation ? 0 : 1;                      // if not wall following or in right direction, or was starting wall follow and got to end of turn search (obstacle probably moved)
+          else if (substate == 2 && rightwardDistance < wallRTolerance) // we have reoriented
+          {
+            substate = 3;
+          }
+        }
+        else
+        {
+          substate = 2; // we must start turning left if we are blocked
+          searchLimit = robot.bearing + PI / 2;
+        }
+      }
+      break;
+    }
+    case 2: // attackClosest()
+    {
+      if (substate == 0) {
+        if (forwardDistance < closestDistance) {
+          closestDistance = forwardDistance;
+          target_bearing = bearing;
+        }
+        if (rightwardDistance < closestDistance) {
+          closestDistance = rightwardDistance;
+          target_bearing = modAngle(bearing - PI / 2); //TODO: confirm that clockwise is negative angle direction
+        }
+        if (closestDistance < wallFTolerance * 3 || similarAngle(robot.bearing, searchLimit, bearingTolerance)) {
+          substate = 1;
+        }
+      } else if (substate == 1 && similarAngle(robot.bearing, target_bearing, bearingTolerance)) {
+        substate = 2;
+      } else if (substate = 2) {
+        if (forwardDistance > wallFTolerance * 5) {
+          substate = 0;
+        }
       }
     }
-    else
+    case 3: // attackStructure()
     {
-      nav_substate = 2; // we must start turning left if we are blocked
-      wallFollowBearing = robot.bearing + PI / 2;
+
     }
   }
+}
+
+void Robot::orientTo(float bearing) {
+    float angleDiff = modAngle(bearing - robot.bearing);
+    lSpeed = aggresiveBearingConst * angleDiff;
+    rSpeed = -1 * aggresiveBearingConst * angleDiff;
 }
 
 void Robot::navTo()
 {
-  updateNavToState();
-  switch (nav_substate)
+  switch (substate)
   {
   case 0: // Move Forward
   {
-    float angleDiff = modAngle(calcAngle(x, y, target_x, target_y) - robot.bearing);
+    float angleDiff = modAngle(location.calcAngle(target) - robot.bearing);
     lSpeed = 50 + passiveBearingConst / 10 * angleDiff;
     rSpeed = 50 - passiveBearingConst / 10 * angleDiff;
     break;
   }
   case 1: // Turn until we are oriented to target
   {
-    float angleDiff = modAngle(calcAngle(x, y, target_x, target_y) - robot.bearing);
-    lSpeed = aggresiveBearingConst * angleDiff;
-    rSpeed = -1 * aggresiveBearingConst * angleDiff;
+    orientTo(location.calcAngle(target));
     break;
   }
   case 2: // Wall following initialization
@@ -96,12 +96,36 @@ void Robot::navTo()
   }
   case 4: // Orient to target bearing
   {
-    float angleDiff = modAngle(target_bearing - robot.bearing);
-    lSpeed = aggresiveBearingConst * angleDiff;
-    rSpeed = -1 * aggresiveBearingConst * angleDiff;
+    orientTo(target_bearing);
     break;
   }
   default:
     break;
+  }
+}
+
+void Robot::attackClosest()
+{
+  switch (substate) {
+    case 0: // Scan
+    {
+      attacking = false;
+      lSpeed = -50;
+      rSpeed = 50;
+      break;
+    }
+    case 1: // Orient
+    {
+      attacking = false;
+      orientTo(target_bearing);
+      break;
+    }
+    case 2: // Attack
+    {
+      attacking = false;
+      lSpeed = 50;
+      rSpeed = 50;
+      attacking = true;
+    }
   }
 }

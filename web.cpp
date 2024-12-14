@@ -83,10 +83,9 @@ void nav()
     x = res.substring(0, firstComma).toInt();
     y = res.substring(firstComma + 1, secondComma).toInt();
     angle = res.substring(secondComma + 1).toInt();
-    robot.target_x = x;
-    robot.target_y = y;
+    robot.target.setPoint(x, y);
     robot.target_bearing = angle * PI / 180;
-    robot.state = 5;
+    robot.state = 2;
     robot.sensors.usedWifi = true;
   }
   else
@@ -95,7 +94,18 @@ void nav()
   }
 }
 
+void attackClosest()
+{
+  robot.target_bearing = robot.bearing;
+  robot.state = 3;
+  robot.attacking = false;
+}
+
+void attackStructure()
+{
+  
+}
 void updateState() {
-  String buffer = String(robot.state) + "," + String(robot.health) + "," + String(robot.leftRPM) + "," + String(robot.rightRPM) + "," + String(robot.lSpeed) + "," + String(robot.rSpeed) + "," + String(robot.bearing) + "," + String(robot.x) + "," + String(robot.y) + "," + String(robot.forwardDistance) + "," + String(robot.rightwardDistance);
+  String buffer = String(robot.state) + "," + String(robot.health) + "," + String(robot.leftRPM) + "," + String(robot.rightRPM) + "," + String(robot.lSpeed) + "," + String(robot.rSpeed) + "," + String(robot.bearing_deg) + "," + String(robot.location.x) + "," + String(robot.location.y) + "," + String(robot.forwardDistance) + "," + String(robot.rightwardDistance);
   h.sendplain(buffer);
 }

@@ -1,5 +1,4 @@
 #include "robot.h"
-#include "auton.h"
 #include <cmath>
 #define PI 3.14159265
 Robot robot;
@@ -153,8 +152,7 @@ void Robot::updateState()
   bearing_deg = bearing * 180 / PI;
   double rotated_cx = cx * cos(bearing) - cy * sin(bearing);
   double rotated_cy = cx * sin(bearing) + cy * cos(bearing);
-  x = sensors.x + rotated_cx;
-  y = sensors.y + rotated_cy;
+  location.setPoint(sensors.location.x + rotated_cx, sensors.location.y + rotated_cy);
   forwardDistance = sensors.forwardDistance;
   rightwardDistance = sensors.rightwardDistance;
 }
@@ -182,25 +180,7 @@ void Robot::startup()
 
 void Robot::action()
 {
-  switch (state)
-  {
-  case 5:
-    navTo();
-    break;
-  case 6:
-    // TODO: attack nearest target
-    break;
-  case 7:
-    // TODO: attack specified static target (nexus, tower, etc.)
-    break;
-  case 8:
-    // TOOD: drive up ramp
-    break;
-  default:
-    // Serial.printf("invalid state %d\n", state);
-    break;
-  }
-  if (state <= 4)
+  if (state == 1)
   {
     if (!activeKeys.empty())
     {
@@ -259,9 +239,26 @@ void Robot::action()
       setLeftSpeed(0);
       setRightSpeed(0);
     }
+  } else {
+  switch (state)
+  {
+  case 2:
+    navTo();
+    break;
+  case 3:
+    // TODO: attack nearest target
+    break;
+  case 4:
+    // TODO: attack specified static target (nexus, tower, etc.)
+    break;
+  case 5:
+    // TOOD: drive up ramp
+    break;
+  default:
+    Serial.printf("invalid state %d\n", state);
+    break;
   }
-  else
-  { // autonomous mode
+   // autonomous mode
     setLeftSpeed(lSpeed);
     setRightSpeed(rSpeed);
   }
@@ -298,9 +295,9 @@ void Robot::printState()
   Serial.print(" Bearing: ");
   Serial.print(bearing_deg);
   Serial.print(" x: ");
-  Serial.print(x);
+  Serial.print(location.x);
   Serial.print(" y: ");
-  Serial.print(y);
+  Serial.print(location.y);
   Serial.print(" Forward Distance: ");
   Serial.print(forwardDistance);
   Serial.print(" Rightward Distance: ");

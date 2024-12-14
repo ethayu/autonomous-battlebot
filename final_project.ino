@@ -1,3 +1,4 @@
+#include "point.h"
 #include "web.h"
 
 #define fidelity 0.05
@@ -17,6 +18,8 @@ void setup()
   h.attachHandler("/startAttack", startAttack);
   h.attachHandler("/stopAttack", stopAttack);
   h.attachHandler("/updateState", updateState);
+  h.attachHandler("/attackClosest", attackClosest);
+  h.attachHandler("/attackStructure", attackStructure);
 }
 
 void loop()

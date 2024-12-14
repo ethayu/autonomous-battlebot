@@ -1,5 +1,6 @@
 #ifndef ROBOT_H
 #define ROBOT_H
+#include "point.h"
 #include "sensors.h"
 #include <set>
 
@@ -58,16 +59,19 @@ private:
     void rightWheelBackward();
     unsigned long lte = 0;
     unsigned long rte = 0;
-    float wallFollowBearing = 0;
+    float searchLimit = 0;
+    float closestDistance = HUGE_VAL;
 
     int servoAngle = 0;
     bool servoDirection = true;
 
-    // Controls
-    int substate;     // 0 = goto target, 1 = goto bearing, 2 = wall follow set up, 3 = wall follow
-    int nav_substate; // 0 = initial orient to target; 1 = moving to target
+    // Autonomous
+    int substate;     // FOR NAV TO: 0 = moving forward to target, 1 = turn to target, 2 = turn left to avoid obstacle (wall following), 3 = wall following
+                      // FOR ATTACK CLOSEST: 0 = scanning, 1 = orienting, 2 = chasing/attacking
     void navTo();
-    void updateNavToState();
+    void orientTo(float bearing);
+    void updateAutonState();
+    void attackClosest();
 
 public:
     int state; // 0 = stop, 1 = forward, 2 = backward, 3 = left, 4 = right, 5 = navigate, 6 = attack, 7 = attack static target, 8 = navigate up ramp
@@ -87,15 +91,13 @@ public:
     bool rightForward = true;
     float bearing;
     float bearing_deg;
-    float x = 0;
-    float y = 0;
-    int target_x = 1000;
-    int target_y = 1000;
+    Point location;
+    Point target;
     float target_bearing = PI / 2;
     Sensors sensors;
     bool attacking = false;
 
-    //web
+    // web
     std::set<int> activeKeys;
 };
 extern Robot robot;

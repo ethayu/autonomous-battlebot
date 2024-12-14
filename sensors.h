@@ -1,6 +1,7 @@
 #ifndef SENSORS_H
 #define SENSORS_H
 #include "vive510.h"
+#include "point.h"
 #include <Wire.h>
 #include "Adafruit_VL53L1X.h"
 #include "SharpIR.h"
@@ -43,10 +44,8 @@ private:
     void updateLocalization();
     void updateForwardDistance();
     void updateRightwardDistance();
-    int x1 = 0;
-    int y1 = 0;
-    int x2 = 0;
-    int y2 = 0;
+    Point loc1;
+    Point loc2;
 
     unsigned long lastHealthUpdate = 0;
 
@@ -57,8 +56,7 @@ public:
     int rightRPM = 0;
     int health = 100;
     float bearing;
-    float x = 0;
-    float y = 0;
+    Point location;
     int forwardDistance = 0;
     uint16_t rightwardDistance = 0;
     bool usedWifi = false;

@@ -1,7 +1,6 @@
 #include "sensors.h"
 #include <math.h>
 #include <SharpIR.h>
-#define PI 3.14159265
 
 SharpIR psd_sensor(PSD_PIN, PSD_model);
 
@@ -178,12 +177,9 @@ void Sensors::updateLocalization()
     vive1->sync(5);
   }
   if (l_x != 0 && l_y != 0) {
-    x1 = l_x, y1 = l_y;
+    loc1.setPoint(l_x, l_y);
   }
-  Serial.print("x1: ");
-  Serial.print(x1);
-  Serial.print(" y1: ");
-  Serial.println(y1);
+  loc1.print();
 
   if (vive2->status() == VIVE_RECEIVING)
   {
@@ -210,17 +206,14 @@ void Sensors::updateLocalization()
     vive2->sync(5);
   }
   if (l_x != 0 && l_y != 0) {
-    x2 = l_x, y2 = l_y;
+    loc2.setPoint(l_x, l_y);
   }
-  Serial.print("x2: ");
-  Serial.print(x2);
-  Serial.print(" y2: ");
-  Serial.println(y2);
-  float dx = x2 - x1;
-  float dy = y2 - y1;
+  loc2.print();
+  float dx = loc2.x - loc1.x;
+  float dy = loc2.y - loc1.y;
   bearing = atan2(dy, dx);
-  x = (x1 + x2) / 2;
-  y = (y1 + y2) / 2;
+
+  location.setPoint((loc1.x + loc2.x) / 2.0, (loc1.y + loc2.y) / 2.0);
 }
 
 void Sensors::updateRightwardDistance()

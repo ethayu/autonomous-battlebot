@@ -1,7 +1,6 @@
 #ifndef AUTON_H
 #define AUTON_H
 #include "robot.h"
-#define distTolerance 50   // tolerance of target region
 #define wallFTolerance 100 // forward tolerance
 #define wallRTolerance 100 // right sensor tolerance
 #define wallRLowerTol 50
@@ -17,5 +16,4 @@ float calcAngle(int x1, int y1, int x2, int y2);
 bool similarAngle(float angle1, float angle2, float tolerance);
 float modAngle(float angle);
 bool hasReachedTarget(int currX, int currY, int targetX, int targetY);
-// auton functions
 #endif
