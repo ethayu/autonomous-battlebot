@@ -87,6 +87,7 @@ void nav()
     robot.target_bearing = angle * PI / 180;
     robot.state = 2;
     robot.sensors.usedWifi = true;
+    robot.substate = 0;
   }
   else
   {
@@ -99,11 +100,49 @@ void attackClosest()
   robot.target_bearing = robot.bearing;
   robot.state = 3;
   robot.attacking = false;
+  robot.substate = 0;
 }
 
 void attackStructure()
 {
-  
+ robot.state = 4;
+ robot.attacking = false;
+ robot.substate = 0; 
+ int structure = h.getVal();
+ switch (structure) {
+  case 0: {
+    robot.target.setPoint(RED_NEXUS);
+    robot.target_bearing = LOOK_AT_RED_NEXUS;
+    break;
+  }
+  case 1: {
+    robot.target.setPoint(BLUE_NEXUS);
+    robot.target_bearing = LOOK_AT_BLUE_NEXUS;
+    break;
+  }
+  case 2: {
+    robot.target.setPoint(RED_TOWER);
+    robot.target_bearing = LOOK_AT_RED_NEXUS;
+    break;
+  }
+  case 3: {
+    robot.target.setPoint(BLUE_TOWER);
+    robot.target_bearing = LOOK_AT_BLUE_NEXUS;
+    break;
+  }
+  case 4: {
+    robot.target.setPoint(RED_UPPER_TOWER);
+    robot.target_bearing = LOOK_AT_TOP;
+    break;
+  }
+  case 5: {
+    robot.target.setPoint(BLUE_UPPER_TOWER);
+    robot.target_bearing = LOOK_AT_TOP;
+    break;
+  }
+  default:
+    break;
+ }
 }
 void updateState() {
   String buffer = String(robot.state) + "," + String(robot.health) + "," + String(robot.leftRPM) + "," + String(robot.rightRPM) + "," + String(robot.lSpeed) + "," + String(robot.rSpeed) + "," + String(robot.bearing_deg) + "," + String(robot.location.x) + "," + String(robot.location.y) + "," + String(robot.forwardDistance) + "," + String(robot.rightwardDistance);

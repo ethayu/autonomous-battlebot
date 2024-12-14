@@ -66,12 +66,11 @@ private:
     bool servoDirection = true;
 
     // Autonomous
-    int substate;     // FOR NAV TO: 0 = moving forward to target, 1 = turn to target, 2 = turn left to avoid obstacle (wall following), 3 = wall following
-                      // FOR ATTACK CLOSEST: 0 = scanning, 1 = orienting, 2 = chasing/attacking
     void navTo();
     void orientTo(float bearing);
     void updateAutonState();
     void attackClosest();
+    void attackStructure();
 
 public:
     int state; // 0 = stop, 1 = forward, 2 = backward, 3 = left, 4 = right, 5 = navigate, 6 = attack, 7 = attack static target, 8 = navigate up ramp
@@ -96,6 +95,10 @@ public:
     float target_bearing = PI / 2;
     Sensors sensors;
     bool attacking = false;
+    
+    int substate;     // FOR NAV TO: 0 = moving forward to target, 1 = turn to target, 2 = turn left to avoid obstacle (wall following), 3 = wall following, 4 = reached close, 5 = done
+                      // FOR ATTACK CLOSEST: 0 = scanning, 1 = orienting, 2 = chasing/attacking
+                      // FOR ATTACK STRUCTURE: 0-5 (navigating through navTo()), 6 = attacking
 
     // web
     std::set<int> activeKeys;

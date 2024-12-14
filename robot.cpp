@@ -215,7 +215,7 @@ void Robot::action()
         {
           leftSpeed += 0.5;
           rightSpeed -= 0.5;
-        } 
+        }
         else if (activeKeys.contains(2) && !activeKeys.contains(3))
         {
           leftSpeed -= 0.5;
@@ -239,36 +239,48 @@ void Robot::action()
       setLeftSpeed(0);
       setRightSpeed(0);
     }
-  } else {
-  switch (state)
-  {
-  case 2:
-    navTo();
-    break;
-  case 3:
-    // TODO: attack nearest target
-    break;
-  case 4:
-    // TODO: attack specified static target (nexus, tower, etc.)
-    break;
-  case 5:
-    // TOOD: drive up ramp
-    break;
-  default:
-    Serial.printf("invalid state %d\n", state);
-    break;
   }
-   // autonomous mode
+  else
+  {
+    updateAutonState();
+    switch (state)
+    {
+    case 2: // navTo() state
+    {
+      navTo();
+      break;
+    }
+    case 3:
+    {
+      attackClosest();
+      break;
+    }
+    case 4:
+    {
+      attackStructure();
+      break;
+    }
+    case 5:
+      // TOOD: drive up ramp
+      break;
+    default:
+      Serial.printf("invalid state %d\n", state);
+      break;
+    }
+    // autonomous mode
     setLeftSpeed(lSpeed);
     setRightSpeed(rSpeed);
   }
   if (attacking)
   {
-    if (servoDirection) {
+    if (servoDirection)
+    {
       servoAngle += 5;
       if (servoAngle >= 180)
         servoDirection = false;
-    } else {
+    }
+    else
+    {
       servoAngle -= 5;
       if (servoAngle <= 0)
         servoDirection = true;

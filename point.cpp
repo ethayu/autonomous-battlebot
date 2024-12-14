@@ -36,6 +36,9 @@ bool hasReachedTarget(int currX, int currY, int targetX, int targetY)
   return euclideanDist(currX, currY, targetX, targetY) < distTolerance;
 }
 
+Point::Point(float x, float y) : x(x), y(y) {}
+Point::Point(): x(0), y(0) {}
+
 float Point::euclideanDistance(Point p)
 {
   float dist = hypot(p.x - x, p.y - y);
@@ -57,6 +60,12 @@ void Point::setPoint(float x, float y)
 {
   this->x = x;
   this->y = y;
+}
+
+void Point::setPoint(Point p) 
+{
+  x = p.x;
+  y = p.y;
 }
 
 void Point::print() {
