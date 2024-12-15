@@ -16,11 +16,13 @@ void startAttack()
 {
   robot.attacking = true;
   robot.attackingTime = millis();
+  robot.sensors.usedWifi += 1;
 }
 
 void stopAttack() 
 {
   robot.attacking = false;
+  robot.sensors.usedWifi += 1;
 }
 
 void press()
@@ -42,7 +44,7 @@ void press()
   // }
   robot.activeKeys.insert(direction);
   robot.state = 1;
-  robot.sensors.usedWifi = true;
+  robot.sensors.usedWifi += 1;
 
   // #ifdef DEBUG
   // Serial.print("Set contents after press request: ");
@@ -73,7 +75,7 @@ void release()
   int direction = h.getVal();
   robot.activeKeys.erase(direction);
   robot.state = 0;
-  robot.sensors.usedWifi = true;
+  robot.sensors.usedWifi += 1;
 }
 
 void nav()
@@ -93,7 +95,7 @@ void nav()
     robot.target.setPoint(x, y);
     robot.target_bearing = angle * PI / 180;
     robot.state = 2;
-    robot.sensors.usedWifi = true;
+  robot.sensors.usedWifi += 1;
     robot.substate = 0;
   }
   else
@@ -108,7 +110,7 @@ void attackClosest()
   robot.state = 3;
   robot.attacking = false;
   robot.substate = 0;
-  robot.sensors.usedWifi = true;
+  robot.sensors.usedWifi += 1;
 }
 
 void attackStructure()
@@ -164,7 +166,7 @@ void attackStructure()
   default:
     break;
  }
-  robot.sensors.usedWifi = true;
+  robot.sensors.usedWifi += 1;
 }
 void updateState() {
   String buffer = String(robot.state) + "," + String(robot.health) + "," + String(robot.leftRPM) + "," + String(robot.rightRPM) + "," + String(robot.lSpeed) + "," + String(robot.rSpeed) + "," + String(robot.bearing_deg) + "," + String(robot.location.x) + "," + String(robot.location.y) + "," + String(robot.forwardDistance) + "," + String(robot.rightwardDistance);

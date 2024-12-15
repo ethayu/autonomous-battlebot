@@ -178,7 +178,10 @@ void Robot::startup()
 
 void Robot::action()
 {
-  if (state <= 1)
+  if (state == 0) {
+    setLeftSpeed(0);
+    setRightSpeed(0);
+  } else if (state <= 1)
   {
     #ifdef DEBUG
     Serial.print("Set contents before action: ");
@@ -280,7 +283,7 @@ void Robot::action()
     setLeftSpeed(lSpeed);
     setRightSpeed(rSpeed);
   }
-  if (attacking)
+  if (attacking && health > 0)
   {
     if (millis() - attackingTime < 1000) {
       servoAngle = 180;

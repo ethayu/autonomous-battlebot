@@ -158,7 +158,6 @@ void Robot::orientTo(float bearing)
 
 void Robot::navTo()
 {
-  substate = 3;
   switch (substate)
   {
   case 0: // Move Forward

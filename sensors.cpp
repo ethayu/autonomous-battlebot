@@ -25,15 +25,16 @@ void Sensors::updateHealth()
     Serial.print("Used Wifi: ");
     Serial.println(usedWifi);
     #endif
-    if (usedWifi) {
+    if (usedWifi > 0) {
       #ifdef DEBUG
       Serial.print("Sending health deduct to: ");
       Serial.println(TOPHAT_I2C_ADDR);
       #endif
-      I2Ctophat.beginTransmission(TOPHAT_I2C_ADDR); 
-      I2Ctophat.write(0x1);                      
+      // usedWifi /= 2;
+      I2Ctophat.beginTransmission(TOPHAT_I2C_ADDR);         
+      I2Ctophat.write(usedWifi); 
       I2Ctophat.endTransmission();
-      usedWifi = false;
+      usedWifi = 0;
     }
     I2Ctophat.requestFrom(TOPHAT_I2C_ADDR, 1);
     if (I2Ctophat.available())

@@ -40,7 +40,7 @@ public:
     Point location;
     int forwardDistance = 0;
     uint16_t rightwardDistance = 0;
-    bool usedWifi = false;
+    int usedWifi = 0;
 };
 
 extern SharpIR psd_sensor;
