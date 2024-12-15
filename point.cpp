@@ -18,7 +18,7 @@ float calcAngle(int x1, int y1, int x2, int y2)
 bool similarAngle(float angle1, float angle2, float tolerance)
 {
   angle1 = modAngle(angle1);
-  angle2 = modAngle(angle2);
+  angle2 = modAngle(angle2 + 2 * PI);
 
   float diff = fabs(angle1 - angle2);
 
@@ -38,7 +38,7 @@ bool hasReachedTarget(int currX, int currY, int targetX, int targetY)
 }
 
 Point::Point(float x, float y) : x(x), y(y) {}
-Point::Point(): x(0), y(0) {}
+Point::Point(): x(1400), y(2400) {}
 
 float Point::euclideanDistance(Point p)
 {
@@ -48,7 +48,7 @@ float Point::euclideanDistance(Point p)
 
 float Point::calcAngle(Point p)
 {
-  float angle = atan2(p.y - y, p.x - x);
+  float angle = modAngle(atan2(p.y - y, p.x - x));
   return angle;
 }
 

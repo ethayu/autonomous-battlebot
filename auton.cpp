@@ -5,9 +5,9 @@ void Robot::updateAutonState()
 {
   switch (state)
   {
-  case 1: // navTo()
+  case 2: // navTo()
   {
-    if (location.hasReachedPoint(target))
+    if (location.hasReachedPoint(target) && forwardDistance <= wallFTolerance)
     {
       if (similarAngle(robot.bearing, target_bearing, bearingTolerance))
       {
@@ -20,7 +20,20 @@ void Robot::updateAutonState()
     }
     else
     {
+      while (!similarAngle(robot.bearing, location.calcAngle(target), bearingTolerance))
+      {
+        orientTo(location.calcAngle(target));
+        delay(200);
+      }
+      while (forwardDistance <= wallFTolerance)
+      {
+        setLeftSpeed(-10);
+        setRightSpeed(-10);
+        delay(200);
+      }
+      orientTo(modAngle(bearing + PI / 2));
       bool correctOrientation = similarAngle(robot.bearing, location.calcAngle(target), bearingTolerance);
+      Serial.println(location.calcAngle(target));
       if (forwardDistance > wallFTolerance) // if nothing in front
       {
         if (substate < 2 || correctOrientation || (substate == 2 && similarAngle(robot.bearing, searchLimit, bearingTolerance)))
@@ -38,7 +51,7 @@ void Robot::updateAutonState()
     }
     break;
   }
-  case 2: // attackClosest()
+  case 3: // attackClosest()
   {
     if (substate == 0)
     {
@@ -69,32 +82,89 @@ void Robot::updateAutonState()
       }
     }
   }
-  case 3: // attackStructure()
+  case 4: // attackStructure()
   {
     if (substate == 5)
     { // if navTo() has finished
       substate = 6;
     }
+    break;
   }
+  case 5:
+  {
+    if (forwardDistance < wallFTolerance)
+    {
+      setLeftSpeed(-5);
+      setRightSpeed(-5);
+      delay(2000);
+#ifdef VIVE
+      if (similarAngle(robot.bearing, target_bearing, bearingTolerance))
+      {
+        target_bearing = modAngle(target_bearing + PI);
+      }
+      orientTo(target_bearing);
+      Serial.println(target_bearing);
+#endif
+#ifndef VIVE
+      setLeftSpeed(-5);
+      setRightSpeed(5);
+      delay(2000);
+#endif
+    }
+#ifdef VIVE
+    if (!similarAngle(robot.bearing, target_bearing, bearingTolerance))
+    {
+      orientTo(target_bearing);
+      Serial.println(target_bearing);
+    }
+    else
+    {
+#endif
+      lSpeed = 6;
+      rSpeed = 5;
+      Serial.println("Step 5");
+#ifdef VIVE
+    }
+#endif
+    break;
+  }
+  case 6:
+  {
+    if (forwardDistance < wallFTolerance)
+    {
+      setLeftSpeed(-5);
+      setRightSpeed(-5);
+      delay(2000);
+      setLeftSpeed(-5);
+      setRightSpeed(5);
+      delay(800);
+    }
+    lSpeed = 6;
+    rSpeed = 5;
+    Serial.println("Step 5");
+    break;
+  }
+  default:
+    break;
   }
 }
 
 void Robot::orientTo(float bearing)
 {
   float angleDiff = modAngle(bearing - robot.bearing);
-  lSpeed = aggresiveBearingConst * angleDiff;
-  rSpeed = -1 * aggresiveBearingConst * angleDiff;
+  lSpeed = -1 * aggresiveBearingConst * angleDiff;
+  rSpeed = aggresiveBearingConst * angleDiff;
 }
 
 void Robot::navTo()
 {
+  substate = 3;
   switch (substate)
   {
   case 0: // Move Forward
   {
-    float angleDiff = modAngle(location.calcAngle(target) - robot.bearing);
-    lSpeed = 50 + passiveBearingConst / 10 * angleDiff;
-    rSpeed = 50 - passiveBearingConst / 10 * angleDiff;
+    lSpeed = 5;
+    rSpeed = 5;
     break;
   }
   case 1: // Turn until we are oriented to target
@@ -104,14 +174,14 @@ void Robot::navTo()
   }
   case 2: // Wall following initialization
   {
-    lSpeed = -50;
-    rSpeed = 50;
+    lSpeed = -10;
+    rSpeed = 10;
     break;
   }
   case 3: // Wall following
   {
-    lSpeed = 50;
-    rSpeed = 50 + wallFollowConst * (wallFollowRightDist - rightwardDistance);
+    lSpeed = min(2 - wallFollowConst * (wallFollowRightDist - rightwardDistance), 2.3);
+    rSpeed = 5 + wallFollowConst * (wallFollowRightDist - rightwardDistance);
     break;
   }
   case 4: // Orient to target bearing
@@ -136,8 +206,8 @@ void Robot::attackClosest()
   case 0: // Scan
   {
     attacking = false;
-    lSpeed = -50;
-    rSpeed = 50;
+    lSpeed = -20;
+    rSpeed = 20;
     break;
   }
   case 1: // Orient
@@ -149,8 +219,8 @@ void Robot::attackClosest()
   case 2: // Attack
   {
     attacking = false;
-    lSpeed = 50;
-    rSpeed = 50;
+    lSpeed = 20;
+    rSpeed = 20;
     attacking = true;
   }
   }
@@ -164,8 +234,8 @@ void Robot::attackStructure()
   }
   else
   {
-    lSpeed = 50;
-    rSpeed = 50;
+    lSpeed = 20;
+    rSpeed = 20;
     attacking = true;
   }
 }

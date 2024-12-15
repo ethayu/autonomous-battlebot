@@ -14,18 +14,6 @@ void Robot::setLeftSpeed(int speed)
   }
   else
   {
-    if (speed < 0)
-    {
-      if (leftForward)
-        leftWheelBackward();
-    }
-    else
-    {
-      if (!leftForward)
-      {
-        leftWheelForward();
-      }
-    }
     float dt = (millis() - lte) / 1000.0;
     int targetRPM = map(speed, -100, 100, -1 * lRPMRange, lRPMRange);
     float error = targetRPM - leftRPM;
@@ -39,9 +27,11 @@ void Robot::setLeftSpeed(int speed)
     float derivativeTerm = lkd * derivative;
 
     int pidOutput = proportional + integralTerm + derivativeTerm;
+    #ifdef DEBUG
     pidOutput = constrain(pidOutput, -1 * lRPMRange, lRPMRange);
     Serial.print("Left: ");
     plotData(leftRPM, targetRPM, error, proportional, integralTerm, derivativeTerm, pidOutput);
+    #endif
 
     previousErrorLeft = error;
 
@@ -86,8 +76,10 @@ void Robot::setRightSpeed(int speed)
     int pidOutput = proportional + integralTerm + derivativeTerm;
     pidOutput = constrain(pidOutput, -1 * rRPMRange, rRPMRange);
 
+    #ifdef DEBUG
     Serial.print("Right: ");
     plotData(rightRPM, targetRPM, error, proportional, integralTerm, derivativeTerm, pidOutput);
+    #endif
     previousErrorRight = error;
 
     if (targetRPM < 0)
@@ -147,8 +139,8 @@ void Robot::updateState()
   {
     rightRPM = -1 * rightRPM;
   }
-  // if (health <= 0)
-  //   state = 0;
+  if (health <= 0)
+    state = 0;
   bearing = sensors.bearing;
   bearing_deg = bearing * 180 / PI;
   double rotated_cx = cx * cos(bearing) - cy * sin(bearing);
@@ -160,6 +152,7 @@ void Robot::updateState()
 
 void Robot::startup()
 {
+  activeKeys = std::set<int>();
   #ifdef MOTORS
   ledcAttach(pwmPin1, 30, PWM_RESOLUTION);
   ledcAttach(pwmPin2, 30, PWM_RESOLUTION);
@@ -175,8 +168,9 @@ void Robot::startup()
   rte = lte;
   #endif
   #ifdef ATTACK
-  ledcAttach(servoPin1, 30, PWM_RESOLUTION);
-  ledcAttach(servoPin2, 30, PWM_RESOLUTION);
+  attackingTime = millis();
+  ledcAttach(servoPin1, 50, PWM_RESOLUTION);
+  ledcAttach(servoPin2, 50, PWM_RESOLUTION);
   #endif
 
   sensors.startup();
@@ -184,30 +178,38 @@ void Robot::startup()
 
 void Robot::action()
 {
-  if (state == 1)
+  if (state <= 1)
   {
+    #ifdef DEBUG
+    Serial.print("Set contents before action: ");
+    for (const int &element : activeKeys) {
+        Serial.print(element);
+        Serial.print(" "); // Space between elements
+    }
+    Serial.println(); // Newline at the end
+    #endif
     if (!activeKeys.empty())
     {
       float leftSpeed = 0;
       float rightSpeed = 0;
       if (activeKeys.contains(1))
       {
-        leftSpeed += 1;
-        rightSpeed += 1;
+        leftSpeed += 0.75;
+        rightSpeed += 0.75;
       }
       if (activeKeys.contains(2))
       {
-        leftSpeed -= 1;
-        rightSpeed -= 1;
+        leftSpeed -= 0.75;
+        rightSpeed -= 0.75;
       }
       if (activeKeys.contains(3))
       {
-        if (activeKeys.contains(1) || !activeKeys.contains(4))
+        if (!activeKeys.contains(2) && (!activeKeys.contains(4) || activeKeys.contains(1)))
         {
           leftSpeed -= 0.5;
           rightSpeed += 0.5;
         }
-        else if (activeKeys.contains(2) && !activeKeys.contains(4))
+        else if (activeKeys.contains(2) && !activeKeys.contains(1))
         {
           leftSpeed += 0.5;
           rightSpeed -= 0.5;
@@ -215,18 +217,18 @@ void Robot::action()
       }
       if (activeKeys.contains(4))
       {
-        if (activeKeys.contains(1) || !activeKeys.contains(3))
+        if (!activeKeys.contains(2) && (!activeKeys.contains(3) || activeKeys.contains(1)))
         {
           leftSpeed += 0.5;
           rightSpeed -= 0.5;
         }
-        else if (activeKeys.contains(2) && !activeKeys.contains(3))
+        else if (activeKeys.contains(2) && !activeKeys.contains(1))
         {
           leftSpeed -= 0.5;
           rightSpeed += 0.5;
         }
       }
-      int mag = std::max(abs(leftSpeed), abs(rightSpeed));
+      float mag = std::max(abs(leftSpeed), abs(rightSpeed));
       if (mag == 0)
       {
         setLeftSpeed(0);
@@ -234,17 +236,19 @@ void Robot::action()
       }
       else
       {
+        if (activeKeys.size() == 1 && (activeKeys.contains(3) || activeKeys.contains(4))) mag *= 2;
         setLeftSpeed(userSpeed * leftSpeed / mag);
         setRightSpeed(userSpeed * rightSpeed / mag);
       }
     }
     else
     {
+      state = 0; // sanity set
       setLeftSpeed(0);
       setRightSpeed(0);
     }
   }
-  else
+  else if (state > 1)
   {
     updateAutonState();
     switch (state)
@@ -264,9 +268,10 @@ void Robot::action()
       attackStructure();
       break;
     }
-    case 5:
+    case 5:{
       // TOOD: drive up ramp
       break;
+    }
     default:
       Serial.printf("invalid state %d\n", state);
       break;
@@ -277,25 +282,26 @@ void Robot::action()
   }
   if (attacking)
   {
-    if (servoDirection)
-    {
-      servoAngle += 5;
-      if (servoAngle >= 180)
-        servoDirection = false;
+    if (millis() - attackingTime < 1000) {
+      servoAngle = 180;
+    } else if (millis() - attackingTime < 2000) {
+      servoAngle = 0;
+    } else {
+      attackingTime = millis();
+      servoAngle = 180;
     }
-    else
-    {
-      servoAngle -= 5;
-      if (servoAngle <= 0)
-        servoDirection = true;
-    }
-    ledcWrite(servoPin1, map(servoAngle, 0, 180, 0, MAX_PWM));
-    ledcWrite(servoPin2, map(servoAngle, 0, 180, 0, MAX_PWM));
+
+    ledcWrite(servoPin1, map(servoAngle, 0, 180, .025 * MAX_PWM, .2 * MAX_PWM)); //may be unexpected behavior due to PWM changing every 1ms
+    // ledcWrite(servoPin2, map(servoAngle, 0, 180, .025 * MAX_PWM, .2 * MAX_PWM));
   }
 }
 
 void Robot::printState()
 {
+  #ifdef DEBUG 
+  Serial.print("PSD ADC Output: ");
+  Serial.println(analogRead(PSD_PIN));
+  #endif
   Serial.print("State: ");
   Serial.print(state);
   Serial.print(" Health: ");
@@ -314,6 +320,10 @@ void Robot::printState()
   Serial.print(location.x);
   Serial.print(" y: ");
   Serial.print(location.y);
+  Serial.print(" target x: ");
+  Serial.print(target.x);
+  Serial.print(" target y: ");
+  Serial.print(target.y);
   Serial.print(" Forward Distance: ");
   Serial.print(forwardDistance);
   Serial.print(" Rightward Distance: ");

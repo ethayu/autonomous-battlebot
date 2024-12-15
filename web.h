@@ -8,10 +8,9 @@ const char body[] PROGMEM = R"===(
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control Panel</title>
-  <style>
+    <meta charset="UTF-8">
+    <title>Control Panel</title>
+    <style>
       /* Center the control panel */
       .control-panel {
         display: flex;
@@ -71,6 +70,28 @@ const char body[] PROGMEM = R"===(
         padding: 10px 20px;
         font-size: 16px;
       }
+
+      /* Style the canvas container */
+      .canvas-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+        border: 1px solid #ccc;
+        padding: 10px;
+      }
+
+      #coordCanvas {
+        border: 1px solid #000;
+      }
+
+      .angle-selector {
+        margin-top: 20px;
+      }
+
+      .submit-button {
+        margin-top: 10px;
+      }
     </style>
   </head>
   
@@ -93,9 +114,18 @@ const char body[] PROGMEM = R"===(
       </div>
       
       <div class="input-fields">
-        <input type="number" id="xInput" placeholder="X Coordinate">
-        <input type="number" id="yInput" placeholder="Y Coordinate">
         <input type="number" id="angleInput" placeholder="Angle (degrees)">
+      </div>
+
+      <div class="canvas-container">
+        <!-- Rectangle with 2:3 ratio (height:width), for example:
+             width = 300px, height = 200px -->
+        <canvas id="coordCanvas" width="300" height="200"></canvas>
+        <p>Click inside the rectangle to set new_x, new_y</p>
+      </div>
+
+      <div class="submit-button">
+        <button id="enterButton" onclick="onEnter()">Enter</button>
       </div>
     </div>
 
@@ -104,7 +134,47 @@ const char body[] PROGMEM = R"===(
       <button id="stopAttack" onclick="stopAttack()">Stop Attack</button>
     </div>
 
+    <div class="bottom-right-buttons">
+      <style>
+        .bottom-right-buttons {
+          position: absolute;
+          bottom: 20px;
+          right: 20px;
+          display: grid;
+          grid-template-columns: repeat(3, auto);
+          gap: 10px;
+        }
+
+        .bottom-right-buttons button {
+          padding: 10px 15px;
+          font-size: 14px;
+        }
+      </style>
+      <button onclick="sendAuton(0)">Attack Red Nexus</button>
+      <button onclick="sendAuton(2)">Attack Red Tower</button>
+      <button onclick="sendAuton(4)">Attack Red Upper Tower</button>
+      <button onclick="sendAuton(6)">Wall Follow</button>
+      <button onclick="sendAuton(-4)">Attack Nearest</button>
+      <button onclick="sendAuton(7)">Wall Follow Dumb</button>
+      <button onclick="sendAuton(1)">Attack Blue Nexus</button>
+      <button onclick="sendAuton(3)">Attack Blue Tower</button>
+      <button onclick="sendAuton(5)">Attack Blue Upper Tower</button>
+    </div>
+
     <script>
+      function sendAuton(id) {
+        var req = "";
+        if (id == -4) {
+          req = "attackClosest";
+        } else {
+          req = "attackStructure?val=" + id;
+        }
+        console.log(req);
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", req, true);
+        xhttp.send();
+      }
+
       var state = 0;
       var health = 100;
       var leftRPM = 0;
@@ -132,7 +202,6 @@ const char body[] PROGMEM = R"===(
         var xhttp = new XMLHttpRequest();
         xhttp.open("GET", "startAttack", true);
         xhttp.send();
-
       }
 
       function stopAttack() {
@@ -159,23 +228,25 @@ const char body[] PROGMEM = R"===(
           y = vals[8];
           forwardDistance = vals[9];
           rightwardDistance = vals[10];
-          console.log(vals);
         };
         document.getElementById("state").innerHTML = `State: ${state} | Health: ${health} | Left RPM: ${leftRPM} | Right RPM: ${rightRPM}`;
         document.getElementById("speed").innerHTML = `Left Speed: ${lSpeed} | Right Speed: ${rSpeed} | Bearing: ${bearing}`;
         document.getElementById("position").innerHTML = `x: ${x} | y: ${y} | Forward Distance: ${forwardDistance} | Rightward Distance: ${rightwardDistance}`;
       }
 
-      setInterval(updateState, 10);
+      setInterval(updateState, 200);
+      setInterval(drawScene, 200);
       
       // Function to Handle Button Press
       function directionPress(direction) {
         var xhttp = new XMLHttpRequest();
+        activeKeys[directionKeyMap[direction]] = 1; 
         var req = "press?val=";
-        if (activeKeys["w"] == 1) req += "w";
-        if (activeKeys["a"] == 1) req += "a";
-        if (activeKeys["s"] == 1) req += "s";
-        if (activeKeys["d"] == 1) req += "d";
+        // if (activeKeys["w"] == 1) req += "w";
+        // if (activeKeys["a"] == 1) req += "a";
+        // if (activeKeys["s"] == 1) req += "s";
+        // if (activeKeys["d"] == 1) req += "d";
+        req += direction;
         console.log(req);
         xhttp.open("GET", req, true);
         xhttp.send();
@@ -184,44 +255,40 @@ const char body[] PROGMEM = R"===(
       // Function to Handle Button Release
       function directionRelease(direction) {
         var xhttp = new XMLHttpRequest();
+        activeKeys[directionKeyMap[direction]] = 0; 
         var req = "release?val=";
-        if (activeKeys["w"] == 1) req += "w";
-        if (activeKeys["a"] == 1) req += "a";
-        if (activeKeys["s"] == 1) req += "s";
-        if (activeKeys["d"] == 1) req += "d";
+        // if (activeKeys["w"] == 1) req += "w";
+        // if (activeKeys["a"] == 1) req += "a";
+        // if (activeKeys["s"] == 1) req += "s";
+        // if (activeKeys["d"] == 1) req += "d";
+        req += direction;
         console.log(req);
         xhttp.open("GET", req, true);
         xhttp.send();
       }
 
       // Function to send nav request
-      function sendNavRequest() {
-        const x = document.getElementById("xInput").value;
-        const y = document.getElementById("yInput").value;
+      function onEnter() {
         const angle = document.getElementById("angleInput").value;
-        if (x !== "" && y !== "" && angle !== "") {
+        if (angle !== "" && new_x !== null && new_y !== null) {
           var xhttp = new XMLHttpRequest();
-          xhttp.open("GET", `nav?val=${x},${y},${angle}`, true);
+          console.log(`nav?val=${new_x},${new_y},${angle}`);
+          xhttp.open("GET", `nav?val=${new_x},${new_y},${angle}`, true);
           xhttp.send();
         }
       }
-
-      // Add event listeners to text fields
-      ["xInput", "yInput", "angleInput"].forEach(id => {
-        document.getElementById(id).addEventListener("keydown", function(event) {
-          if (event.key === "Enter") {
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", "nav", true);
-            xhttp.send();
-          }
-        });
-      });
       // Map keys to directions
       const keyDirectionMap = {
         "w": 1, // Forward
         "s": 2, // Backward
         "a": 3, // Left
         "d": 4  // Right
+      };
+      const directionKeyMap = {
+        1: "w", // Forward
+        2: "s", // Backward
+        3: "a", // Left
+        4: "d"  // Right
       };
 
       // Track pressed keys to prevent duplicate events
@@ -242,6 +309,76 @@ const char body[] PROGMEM = R"===(
           activeKeys[key] = 0; // Mark the key as inactive
           directionRelease(keyDirectionMap[key]);
         }
+      });
+
+      let new_x = null;
+      let new_y = null;
+      let canvas = document.getElementById('coordCanvas');
+      let ctx = canvas.getContext('2d');
+
+      // Draw function
+      function drawScene() {
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the rectangle border (already has border from CSS, but we can ensure)
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+        // Get the input x,y
+        var xVal = (x - 1400) / 4800.0 * canvas.width;
+        var yVal = (y - 2400) / 2800.0 * canvas.height;
+
+        // Transform coordinates: origin at top-right
+        // Positive x goes left, positive y goes down
+        // canvas origin (0,0) is top-left by default.
+        // To get top-right as origin: x_on_canvas = canvas.width - xVal, y_on_canvas = yVal
+        let dotCanvasX = canvas.width - xVal;
+        let dotCanvasY = yVal;
+
+        // Draw the blue dot
+        ctx.fillStyle = 'blue';
+        ctx.beginPath();
+        ctx.arc(dotCanvasX, dotCanvasY, 5, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // If we have a clicked location (new_x, new_y), draw a black cross
+        if (new_x !== null && new_y !== null) {
+          var xVal = (new_x - 1400) / 4800.0 * canvas.width;
+          var yVal = (new_y - 2400) / 2800.0 * canvas.height;
+          let crossCanvasX = canvas.width - xVal;
+          let crossCanvasY = yVal;
+          ctx.strokeStyle = 'black';
+          ctx.beginPath();
+          // Horizontal line of the cross
+          ctx.moveTo(crossCanvasX - 5, crossCanvasY);
+          ctx.lineTo(crossCanvasX + 5, crossCanvasY);
+          // Vertical line of the cross
+          ctx.moveTo(crossCanvasX, crossCanvasY - 5);
+          ctx.lineTo(crossCanvasX, crossCanvasY + 5);
+          ctx.stroke();
+        }
+      }
+
+      // Handle canvas click
+      canvas.addEventListener('click', function(e) {
+        let rect = canvas.getBoundingClientRect();
+        let clickX = e.clientX - rect.left;
+        let clickY = e.clientY - rect.top;
+
+        // Convert back from canvas coordinates to our defined system
+        // canvasX = width - new_x => new_x = width - canvasX
+        // canvasY = new_y => new_y = canvasY
+        console.log("raw_new_x", clickX, "new_y", clickY)
+        new_x = canvas.width - clickX;
+        new_y = clickY;
+
+        new_x = 1400 + 4800.0 * new_x / canvas.width;
+        new_y = 2400 + 2800.0 * new_y / canvas.height;
+        console.log("new_x", new_x, "new_y", new_y)
+
+        // Redraw with new cross
       });
     </script>
   </body>

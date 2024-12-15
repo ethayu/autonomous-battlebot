@@ -1,6 +1,8 @@
 #include "sensors.h"
+#include "config.h"
 #include <math.h>
 #include <SharpIR.h>
+#include <Wire.h>
 
 SharpIR psd_sensor(PSD_PIN, PSD_model);
 
@@ -19,18 +21,25 @@ void Sensors::updateHealth()
   unsigned long currentTime = millis();
   if (currentTime - lastHealthUpdate > 5 * 100 || true)
   {
+    #ifdef DEBUG
+    Serial.print("Used Wifi: ");
+    Serial.println(usedWifi);
+    #endif
     if (usedWifi) {
-      Wire1.beginTransmission(TOPHAT_I2C_ADDR); 
-      Wire1.write(1);                      
-      Wire1.endTransmission();
+      #ifdef DEBUG
+      Serial.print("Sending health deduct to: ");
+      Serial.println(TOPHAT_I2C_ADDR);
+      #endif
+      I2Ctophat.beginTransmission(TOPHAT_I2C_ADDR); 
+      I2Ctophat.write(0x1);                      
+      I2Ctophat.endTransmission();
       usedWifi = false;
     }
-    Wire1.requestFrom(TOPHAT_I2C_ADDR, 1);
-    if (Wire1.available())
+    I2Ctophat.requestFrom(TOPHAT_I2C_ADDR, 1);
+    if (I2Ctophat.available())
     {
-      uint8_t byte1 = Wire1.read();
+      uint8_t byte1 = I2Ctophat.read();
       Serial.printf("Recieved data: %d\n", byte1);
-      Serial.println(byte1);
       health = byte1;
     }
     lastHealthUpdate = currentTime;
@@ -260,13 +269,12 @@ void Sensors::updateState()
 void Sensors::startup()
 {
   #ifdef TOPHAT
-  Wire1.begin(TOPHAT_SDA_PIN, TOPHAT_SCL_PIN, TOPHAT_FREQ);
   pinMode(TOPHAT_XSHUT_PIN, OUTPUT);
   digitalWrite(TOPHAT_XSHUT_PIN, LOW);
   #endif
   #ifdef VIVE
-  vive1 = new Vive510(SIGNALPIN1);
-  vive2 = new Vive510(SIGNALPIN2);
+  vive1 = new Vive510(VIVE1_PIN);
+  vive2 = new Vive510(VIVE2_PIN);
   vive1->begin();
   vive2->begin();
   #endif
@@ -281,8 +289,7 @@ void Sensors::startup()
   attachInterrupt(digitalPinToInterrupt(rightEncodePinB), rightUpdateEncoderB, CHANGE);
   #endif
   #ifdef TOF
-  Wire.begin(TOF_SDA_PIN, TOF_SCL_PIN);
-  if (!tofSensor.begin(TOF_I2C_ADDR, &Wire))
+  if (!tofSensor.begin(TOF_I2C_ADDR, &I2Ctof))
   {
     Serial.print(F("Error on init of VL sensor: "));
     Serial.println(tofSensor.vl_status);

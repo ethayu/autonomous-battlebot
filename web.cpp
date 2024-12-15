@@ -1,4 +1,5 @@
 #include "web.h"
+#include "config.h"
 HTML510Server h(80);
 
 void handleRoot()
@@ -14,6 +15,7 @@ void getSpeed()
 void startAttack() 
 {
   robot.attacking = true;
+  robot.attackingTime = millis();
 }
 
 void stopAttack() 
@@ -23,48 +25,53 @@ void stopAttack()
 
 void press()
 {
-  String res = h.getText();
-  robot.activeKeys.empty();
-  if (res.indexOf('w') != -1)
-    robot.activeKeys.insert(1);
-  else
-    robot.activeKeys.erase(1);
-  if (res.indexOf('a') != -1)
-    robot.activeKeys.insert(3);
-  else
-    robot.activeKeys.erase(3);
-  if (res.indexOf('s') != -1)
-    robot.activeKeys.insert(2);
-  else
-    robot.activeKeys.erase(2);
-  if (res.indexOf('d') != -1)
-    robot.activeKeys.insert(4);
-  else
-    robot.activeKeys.erase(4);
+  int direction = h.getVal();
+  // robot.activeKeys = std::set<int>();
+  // String res = h.getText();
+  // for (int i = 0; i < res.length(); i++) {
+  //   char currentChar = res.charAt(i); 
+  //   if (currentChar == 'w') {
+  //     robot.activeKeys.insert(1);
+  //   } else if (currentChar == 'a') {
+  //     robot.activeKeys.insert(3);
+  //   } else if (currentChar == 's') {
+  //     robot.activeKeys.insert(2);
+  //   } else if (currentChar == 'd') {
+  //     robot.activeKeys.insert(4);
+  //   }
+  // }
+  robot.activeKeys.insert(direction);
   robot.state = 1;
   robot.sensors.usedWifi = true;
+
+  // #ifdef DEBUG
+  // Serial.print("Set contents after press request: ");
+  // for (const int &element : robot.activeKeys) {
+  //     Serial.print(element);
+  //     Serial.print(" "); // Space between elements
+  // }
+  // Serial.println(); // Newline at the end
+  // #endif
 }
 
 void release()
 {
-  String res = h.getText();
-  robot.activeKeys.empty();
-  if (res.indexOf('w') != -1)
-    robot.activeKeys.insert(1);
-  else
-    robot.activeKeys.erase(1);
-  if (res.indexOf('a') != -1)
-    robot.activeKeys.insert(3);
-  else 
-    robot.activeKeys.erase(3);
-  if (res.indexOf('s') != -1)
-    robot.activeKeys.insert(2);
-  else
-    robot.activeKeys.erase(2);
-  if (res.indexOf('d') != -1)
-    robot.activeKeys.insert(4);
-  else
-    robot.activeKeys.erase(4);
+  // robot.activeKeys = std::set<int>();
+  // String res = h.getText();
+  // for (int i = 0; i < res.length(); i++) {
+  //   char currentChar = res.charAt(i); 
+  //   if (currentChar == 'w') {
+  //     robot.activeKeys.insert(1);
+  //   } else if (currentChar == 'a') {
+  //     robot.activeKeys.insert(3);
+  //   } else if (currentChar == 's') {
+  //     robot.activeKeys.insert(2);
+  //   } else if (currentChar == 'd') {
+  //     robot.activeKeys.insert(4);
+  //   }
+  // }
+  int direction = h.getVal();
+  robot.activeKeys.erase(direction);
   robot.state = 0;
   robot.sensors.usedWifi = true;
 }
@@ -101,6 +108,7 @@ void attackClosest()
   robot.state = 3;
   robot.attacking = false;
   robot.substate = 0;
+  robot.sensors.usedWifi = true;
 }
 
 void attackStructure()
@@ -140,9 +148,23 @@ void attackStructure()
     robot.target_bearing = LOOK_AT_TOP;
     break;
   }
+  case 6: {
+    #ifdef VIVE
+    if ((robot.bearing > 90 && robot.bearing <= 190) || (robot.bearing < -180 && robot.bearing < 0)) robot.target_bearing = PI;
+    if (robot.bearing < -90 && robot.bearing >= -180) robot.target_bearing = -PI / 2;
+    if (robot.bearing < 0 && robot.bearing >= -90) robot.target_bearing = 0;
+    if (robot.bearing < 90 && robot.bearing >= 0) robot.target_bearing = PI / 2;
+    #endif
+    robot.state = 5;
+    break;
+  }
+  case 7: {
+    robot.state = 6;
+  }
   default:
     break;
  }
+  robot.sensors.usedWifi = true;
 }
 void updateState() {
   String buffer = String(robot.state) + "," + String(robot.health) + "," + String(robot.leftRPM) + "," + String(robot.rightRPM) + "," + String(robot.lSpeed) + "," + String(robot.rSpeed) + "," + String(robot.bearing_deg) + "," + String(robot.location.x) + "," + String(robot.location.y) + "," + String(robot.forwardDistance) + "," + String(robot.rightwardDistance);

@@ -28,7 +28,6 @@ private:
     float closestDistance = HUGE_VAL;
 
     int servoAngle = 0;
-    bool servoDirection = true;
 
     // Autonomous
     void navTo();
@@ -60,6 +59,7 @@ public:
     float target_bearing = PI / 2;
     Sensors sensors;
     bool attacking = false;
+    unsigned long attackingTime = 0;
     
     int substate;     // FOR NAV TO: 0 = moving forward to target, 1 = turn to target, 2 = turn left to avoid obstacle (wall following), 3 = wall following, 4 = reached close, 5 = done
                       // FOR ATTACK CLOSEST: 0 = scanning, 1 = orienting, 2 = chasing/attacking
